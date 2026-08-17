@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "hotel_id": "company-site-v1",
+  "repository_root": ".",
+  "remote": "origin",
+  "target_branch": "main",
+  "baseline_ref": "origin/main",
+  "baseline_sha": "demo-baseline-001",
+  "branch_pattern": "hotel/company-site-v1/room-{room_id}",
+  "worktree_pattern": "../worktrees/company-site-v1-{room_id}",
+  "claim_mechanism": "remote_branch_plus_verified_claim",
+  "force_push_allowed": false,
+  "integration_strategy": "merge_commit",
+  "integration_owner": "lead-agent",
+  "required_checks": ["npm test", "npm run build"],
+  "post_merge_checks": ["npm test", "npm run build"],
+  "rollback_strategy": "revert_merge_commit",
+  "permissions": {
+    "create_branch": "ask_or_explicit_scope",
+    "commit": "ask_or_explicit_scope",
+    "push": "explicit_only",
+    "open_pr": "explicit_only",
+    "merge": "explicit_only",
+    "deploy": "explicit_only",
+    "delete_branch_or_worktree": "explicit_only"
+  }
+}

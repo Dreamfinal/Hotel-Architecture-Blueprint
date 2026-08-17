@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "hotel_id": "replace-me",
+  "title": "Replace with mission title",
+  "objective": "Measurable final outcome",
+  "lifecycle": "DRAFT",
+  "claims_enabled": false,
+  "baseline": {
+    "type": "git_commit_or_snapshot",
+    "value": "UNPINNED"
+  },
+  "room_policy": {
+    "default_deny_writes": true,
+    "max_active_claims_per_room": 1,
+    "max_retry_without_escalation": 3
+  },
+  "integration_owner": "replace-me",
+  "rooms": [
+    {
+      "room_id": "R001",
+      "manifest": "rooms/room-R001/ROOM_MANIFEST.json",
+      "depends_on": [],
+      "status": "DRAFT"
+    }
+  ]
+}

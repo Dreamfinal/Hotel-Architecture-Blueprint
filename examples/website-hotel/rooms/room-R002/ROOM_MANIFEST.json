@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "hotel_id": "company-site-v1",
+  "room_id": "R002",
+  "title": "Responsive page implementation",
+  "status": "BLOCKED_BY_DEPENDENCY",
+  "objective": "Implement five responsive pages from the approved content contract",
+  "owner_role": "frontend-worker",
+  "depends_on": ["R001"],
+  "inputs": ["docs/content/site-map.json", "docs/content/page-copy.md"],
+  "write_allowlist": ["src/pages/**", "src/components/site/**", "tests/navigation/**"],
+  "forbidden": ["change content contract", "deploy", "force push"],
+  "outputs": ["src/pages/**", "tests/navigation/**"],
+  "acceptance_criteria": ["Five routes render", "Navigation works", "Responsive at 375px and 1280px"],
+  "checks": ["npm test", "npm run build"],
+  "reviewer_role": "frontend-reviewer",
+  "next_to": "lead-agent",
+  "escalate_when": ["content contract is incomplete", "required component falls outside allowlist"]
+}

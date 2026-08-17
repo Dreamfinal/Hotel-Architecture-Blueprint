@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "hotel_id": "company-site-v1",
+  "room_id": "R001",
+  "title": "Content and information architecture",
+  "status": "AVAILABLE",
+  "objective": "Produce approved page hierarchy and copy contract for five pages",
+  "owner_role": "content-designer",
+  "depends_on": [],
+  "inputs": ["brief.md"],
+  "write_allowlist": ["docs/content/**"],
+  "forbidden": ["edit application code", "publish"],
+  "outputs": ["docs/content/site-map.json", "docs/content/page-copy.md"],
+  "acceptance_criteria": ["Exactly five pages", "Each page has purpose, heading and CTA"],
+  "checks": ["python tools/check_content_contract.py"],
+  "reviewer_role": "product-owner",
+  "next_to": "R002-owner",
+  "escalate_when": ["brief conflicts with required pages", "new paid asset required"]
+}

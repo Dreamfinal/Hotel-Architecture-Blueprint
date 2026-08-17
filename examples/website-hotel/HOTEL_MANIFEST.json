@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "hotel_id": "company-site-v1",
+  "title": "Company website MVP",
+  "objective": "Deliver a responsive five-page website with tested navigation",
+  "lifecycle": "OPEN",
+  "claims_enabled": true,
+  "baseline": {"type": "git_commit_or_snapshot", "value": "demo-baseline-001"},
+  "room_policy": {"default_deny_writes": true, "max_active_claims_per_room": 1, "max_retry_without_escalation": 3},
+  "integration_owner": "lead-agent",
+  "git_policy": "GIT_POLICY.json",
+  "rooms": [
+    {"room_id": "R001", "manifest": "rooms/room-R001/ROOM_MANIFEST.json", "depends_on": [], "status": "AVAILABLE"},
+    {"room_id": "R002", "manifest": "rooms/room-R002/ROOM_MANIFEST.json", "depends_on": ["R001"], "status": "BLOCKED_BY_DEPENDENCY"}
+  ]
+}

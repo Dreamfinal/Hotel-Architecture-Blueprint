@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "hotel_id": "replace-me",
+  "room_id": "R001",
+  "title": "One independently reviewable outcome",
+  "status": "DRAFT",
+  "objective": "Measurable room outcome",
+  "owner_role": "implementer",
+  "depends_on": [],
+  "inputs": ["canonical/spec.md"],
+  "write_allowlist": ["path/this-room-may-change/**"],
+  "forbidden": ["deploy", "force_push", "delete_outside_allowlist"],
+  "outputs": ["path/to/deliverable"],
+  "acceptance_criteria": ["Observable condition that proves completion"],
+  "checks": ["command-that-returns-exit-code"],
+  "reviewer_role": "reviewer",
+  "next_to": "reviewer",
+  "escalate_when": ["contract conflict", "missing authority", "baseline drift"]
+}
