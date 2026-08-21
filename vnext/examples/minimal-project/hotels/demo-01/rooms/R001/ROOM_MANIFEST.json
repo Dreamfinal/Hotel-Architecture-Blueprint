@@ -7,56 +7,25 @@
   "logical_state": "READY",
   "depends_on": [],
   "claim_base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "inputs": [
-    {
-      "path": "hotels/demo-01/rooms/R001/input/brief.md",
-      "required": true,
-      "purpose": "Compiled context from the pinned control commit."
-    }
-  ],
-  "source_read_allowlist": [
-    "source/input.md"
-  ],
-  "skills": [
-    {
-      "path": "hotels/demo-01/rooms/R001/skills/example/SKILL.md",
-      "required": true,
-      "purpose": "Room-local execution method from the pinned control commit; no Team Repo required."
-    }
-  ],
-  "tools": [
-    {
-      "capability": "text-file-edit",
-      "required": true,
-      "notes": "Any runtime may satisfy this capability."
-    }
-  ],
+  "inputs": [{"path": "hotels/demo-01/rooms/R001/input/brief.md", "required": true, "purpose": "Compiled context from the pinned control commit."}],
+  "source_read_allowlist": ["source/input.md"],
+  "skills": [{"path": "hotels/demo-01/rooms/R001/skills/example/SKILL.md", "required": true, "purpose": "Room-local execution method from the pinned control commit; no Team Repo required."}],
+  "tools": [{"capability": "text-file-edit", "required": true, "notes": "Any runtime may satisfy this capability."}],
   "authority": {
     "allowed": ["read declared packet/source input", "write allowlisted output", "commit/push claim branch"],
     "forbidden": ["edit unrelated source", "merge", "delete foreign refs", "publish/deploy"]
   },
-  "write_allowlist": [
-    "source/output-a.md"
-  ],
-  "return_allowlist": [
-    "hotels/demo-01/rooms/R001/return/"
-  ],
-  "checks": [
-    {
-      "id": "output-exists",
-      "command": "python -c \"from pathlib import Path; assert Path('source/output-a.md').is_file()\"",
-      "required": false,
-      "expected_exit_code": 0,
-      "requires_capability": "python"
-    }
-  ],
+  "write_allowlist": ["source/output-a.md"],
+  "return_allowlist": ["hotels/demo-01/rooms/R001/return/"],
+  "checks": [{"id": "output-exists", "command": "python -c \"from pathlib import Path; assert Path('source/output-a.md').is_file()\"", "required": false, "expected_exit_code": 0, "requires_capability": "python"}],
   "acceptance_criteria": [
     "source/output-a.md exists and is derived only from declared packet/source inputs.",
     "No path outside production/return allowlists changed."
   ],
   "return_contract": {
-    "report_path": "hotels/demo-01/rooms/R001/return/ROOM_REPORT.md",
-    "required_fields": ["hotel_id", "room_id", "claim_id", "control_ref", "control_commit_sha", "claim_base_sha", "head_sha", "changed_paths", "checks_run", "checks_unrun", "unresolved"]
+    "schema_version": "return-vnext-0.1",
+    "report_path": "hotels/demo-01/rooms/R001/return/ROOM_RETURN.json",
+    "required_fields": ["hotel_id", "room_id", "claim_id", "session_id", "control_ref", "control_commit_sha", "claim_base_sha", "head_sha", "status", "changed_paths", "allowlist_self_check", "checks_run", "checks_unrun", "output_paths", "unresolved", "requested_next_state"]
   },
   "reviewer": "Project Coordinator",
   "next_to": "R002",
