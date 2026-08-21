@@ -68,19 +68,21 @@ One ordinary Guest session owns one Room. The Guest may not probe individual for
 
 ## 7. Return on the claim branch
 
-The final Room return records at least:
+The Guest writes standard `ROOM_RETURN.json` on the claim branch with at least:
 
 ```text
 status: RETURNED | IMPLEMENTED_UNVERIFIED | BLOCKED
 control_ref: ...
 control_commit_sha: ...
 claim_base_sha: ...
-head_sha: ...
+implementation_commit_sha: ...   # optional if the Guest created a known implementation commit before final metadata
 changed_paths: ...
 checks_run: ...
 checks_unrun: ...
 unresolved: ...
 ```
+
+The return file does **not** declare the SHA of the commit that contains itself. After the Guest pushes, reviewer/coordinator resolves the exact remote fixed claim ref and records that externally as `return_head_sha`.
 
 Only reviewer/coordinator action can transition durable Room state to `ACCEPTED`.
 
@@ -111,8 +113,8 @@ No ordinary Guest may reclaim/delete a stale-looking branch itself.
 Coordinator/housekeeping:
 
 1. fetches the exact claim branch and claim/return evidence, including its pinned control commit;
-2. writes a recovery audit note containing previous claim/session/control/base/head and reason;
-3. preserves the stale tip under an audit ref such as `refs/archive/hotel/<hotel-id>/<room-id>/attempt-<n>`;
+2. resolves the actual stale branch head and writes a recovery audit note containing previous claim/session/control/base/head and reason;
+3. preserves that stale tip under an audit ref such as `refs/archive/hotel/<hotel-id>/<room-id>/attempt-<n>`;
 4. verifies the archive ref points to the expected stale tip;
 5. deletes the fixed active claim branch under explicit recovery authority;
 6. resets Room logical state to `READY` or `REWORK` on `control_ref`, resolving a new `claim_base_sha` if required;
