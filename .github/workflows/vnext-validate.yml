@@ -33,34 +33,46 @@ jobs:
           python -m json.tool vnext/examples/minimal-project/hotels/demo-01/HOTEL_MANIFEST.json > /dev/null
           python -m json.tool vnext/examples/minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json > /dev/null
           python -m json.tool vnext/examples/minimal-project/hotels/demo-01/rooms/R002/ROOM_MANIFEST.json > /dev/null
+          python -m json.tool vnext/examples/records/CLAIM.example.json > /dev/null
+          python -m json.tool vnext/examples/records/HOTEL_HISTORY.example.json > /dev/null
 
       - name: Install JSON Schema validator
         run: python -m pip install --disable-pip-version-check jsonschema
 
-      - name: Validate example manifests against schemas
+      - name: Validate examples against schemas
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          from jsonschema import Draft202012Validator
+          from jsonschema import Draft202012Validator, FormatChecker
 
           root = Path('vnext')
-          hotel_schema = json.loads((root/'schemas/HOTEL_MANIFEST.schema.json').read_text())
-          room_schema = json.loads((root/'schemas/ROOM_MANIFEST.schema.json').read_text())
-          claim_schema = json.loads((root/'schemas/CLAIM.schema.json').read_text())
-          history_schema = json.loads((root/'schemas/HOTEL_HISTORY.schema.json').read_text())
-          hotel = json.loads((root/'examples/minimal-project/hotels/demo-01/HOTEL_MANIFEST.json').read_text())
-          r1 = json.loads((root/'examples/minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json').read_text())
-          r2 = json.loads((root/'examples/minimal-project/hotels/demo-01/rooms/R002/ROOM_MANIFEST.json').read_text())
+          schema_dir = root / 'schemas'
+          example_dir = root / 'examples'
 
-          Draft202012Validator.check_schema(hotel_schema)
-          Draft202012Validator.check_schema(room_schema)
-          Draft202012Validator.check_schema(claim_schema)
-          Draft202012Validator.check_schema(history_schema)
-          Draft202012Validator(hotel_schema).validate(hotel)
-          Draft202012Validator(room_schema).validate(r1)
-          Draft202012Validator(room_schema).validate(r2)
-          print('JSON_SCHEMA_OK')
+          hotel_schema = json.loads((schema_dir/'HOTEL_MANIFEST.schema.json').read_text())
+          room_schema = json.loads((schema_dir/'ROOM_MANIFEST.schema.json').read_text())
+          claim_schema = json.loads((schema_dir/'CLAIM.schema.json').read_text())
+          history_schema = json.loads((schema_dir/'HOTEL_HISTORY.schema.json').read_text())
+
+          hotel = json.loads((example_dir/'minimal-project/hotels/demo-01/HOTEL_MANIFEST.json').read_text())
+          r1 = json.loads((example_dir/'minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json').read_text())
+          r2 = json.loads((example_dir/'minimal-project/hotels/demo-01/rooms/R002/ROOM_MANIFEST.json').read_text())
+          claim = json.loads((example_dir/'records/CLAIM.example.json').read_text())
+          history = json.loads((example_dir/'records/HOTEL_HISTORY.example.json').read_text())
+
+          checker = FormatChecker()
+          for schema in (hotel_schema, room_schema, claim_schema, history_schema):
+              Draft202012Validator.check_schema(schema)
+          for schema, value in (
+              (hotel_schema, hotel),
+              (room_schema, r1),
+              (room_schema, r2),
+              (claim_schema, claim),
+              (history_schema, history),
+          ):
+              Draft202012Validator(schema, format_checker=checker).validate(value)
+          print('JSON_SCHEMA_EXAMPLES_OK')
           PY
 
       - name: Run positive structural validation
