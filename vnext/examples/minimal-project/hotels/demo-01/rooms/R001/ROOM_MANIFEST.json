@@ -3,15 +3,15 @@
   "hotel_id": "demo-01",
   "room_id": "R001",
   "title": "Produce first demo output",
-  "objective": "Create source/output-a.md using only the compiled demo input.",
+  "objective": "Create source/output-a.md using the compiled Room brief and declared source input.",
   "logical_state": "READY",
   "depends_on": [],
   "claim_base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "inputs": [
     {
-      "path": "source/input.md",
+      "path": "hotels/demo-01/rooms/R001/input/brief.md",
       "required": true,
-      "purpose": "Compiled source input from the pinned control commit."
+      "purpose": "Compiled context from the pinned control commit."
     }
   ],
   "source_read_allowlist": [
