@@ -14,13 +14,19 @@ This directory generalizes the original Hotel Architecture and the proven projec
 
 ## Files
 
-- `PROTOCOL.md` — architecture, state model, Project/Hotel layout, and invariants.
-- `GUEST_PROTOCOL.md` — minimal contract a fresh Guest must know.
-- `CLAIM_PROTOCOL.md` — atomic Git claim, verification, stale recovery, and attempt history.
+- `PROTOCOL.md` — architecture, state model, Project/Hotel layout, dependency-aware bases, and invariants.
+- `GUEST_PROTOCOL.md` — minimal 10-step contract a fresh Guest must know.
+- `CLAIM_PROTOCOL.md` — atomic fixed-ref claim, verification, stale recovery, and attempt history.
+- `RETURN_PROTOCOL.md` — return evidence, review, acceptance, rework, and integration.
 - `LIFECYCLE.md` — design/open/execute/review/close/demolish gates.
+- `VALIDATION.md` — cross-file deterministic opening/closure/demolition checks.
+- `PATH_RULES.md` — runtime-neutral read/write/return allowlist semantics.
 - `schemas/HOTEL_MANIFEST.schema.json` — generic Hotel manifest schema.
-- `schemas/ROOM_MANIFEST.schema.json` — generic Room manifest schema.
+- `schemas/ROOM_MANIFEST.schema.json` — generic Room manifest schema, including read-only Room support.
+- `schemas/HOTEL_HISTORY.schema.json` — minimal audit record retained after demolition.
 - `templates/RECEPTION.md` — human-readable Reception template.
-- `templates/ROOM_START_HERE.md` — compiled one-room entry template.
+- `templates/ROOM_START_HERE.md` — compiled one-Room Guest entry template.
+- `tools/validate_hotel.py` — stdlib cross-file validator with no Team/runtime dependency.
+- `examples/minimal-project/` — dependency-aware replayable example (`R001 → R002`).
 
-The original root Blueprint remains historical/reference material while vNext is evaluated.
+The original root Blueprint remains historical/reference material while vNext is evaluated. vNext is designed so a Project may vendor the required protocol/schema/template/tool subset without granting Guests access to this repository.
