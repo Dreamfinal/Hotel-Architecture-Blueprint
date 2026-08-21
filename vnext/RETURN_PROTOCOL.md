@@ -4,12 +4,14 @@
 
 A Room return is delivered on the Room's fixed claim branch. It is not accepted merely because it was pushed.
 
-The Room manifest defines the report path and required fields. The standard return should include:
+The return must identify both the immutable Room-contract snapshot and the code base used for implementation. The standard return includes:
 
 ```text
 hotel_id
 room_id
 claim_id / session_id
+control_ref
+control_commit_sha
 claim_base_sha
 head_sha
 status
@@ -23,6 +25,8 @@ unresolved
 requested_next_state
 ```
 
+`control_commit_sha` pins the exact Reception/Room packet/skills/criteria the Guest followed. `claim_base_sha` pins the project code/integration tree from which the working claim branch began.
+
 Valid Guest-requested return statuses are:
 
 - `RETURNED` — implementation/output completed and required available checks were run;
@@ -35,16 +39,18 @@ A Guest must never self-assign `ACCEPTED`.
 
 The designated reviewer/coordinator:
 
-1. verifies claim branch identity/base/head;
-2. verifies changed paths against production + return allowlists;
-3. checks no forbidden/unrelated path changed;
-4. verifies declared deterministic evidence or reruns checks in an authorized runtime;
-5. reviews every acceptance criterion;
-6. checks domain/UX/quality criteria that cannot be reduced to exit codes;
-7. records verdict `ACCEPTED`, `REWORK`, or `BLOCKED` with evidence;
-8. integrates/materializes accepted output through the Hotel integration path;
-9. records the accepted integration/source commit;
-10. resolves any newly dependency-ready Room `claim_base_sha` and refreshes control state.
+1. verifies claim branch identity, `control_commit_sha`, `claim_base_sha`, and returned head;
+2. reloads the Room contract from the pinned control commit rather than from a newer moving control ref;
+3. verifies changed paths against that contract's production + return allowlists and Hotel-wide forbidden paths;
+4. checks no forbidden/unrelated path changed;
+5. verifies declared deterministic evidence or reruns checks in an authorized runtime;
+6. reviews every acceptance criterion from the pinned control packet;
+7. checks domain/UX/quality criteria that cannot be reduced to exit codes;
+8. records verdict `ACCEPTED`, `REWORK`, or `BLOCKED` with evidence;
+9. integrates/materializes accepted output through the Hotel integration path;
+10. records the accepted integration/source commit;
+11. compiles any dependency output needed by downstream Rooms, resolves newly-ready Room `claim_base_sha` values, and refreshes Room manifests/Reception on `control_ref`;
+12. verifies the remote control commit before exposing newly-ready Rooms to Guests.
 
 ## Acceptance invariant
 
@@ -52,6 +58,7 @@ The designated reviewer/coordinator:
 push != acceptance
 check pass != domain acceptance
 acceptance != integration
+integration != downstream readiness
 integration != Hotel closure
 ```
 
@@ -59,15 +66,17 @@ Each transition must have explicit evidence.
 
 ## Rework
 
-A rework preserves the same Room identity. The coordinator may preserve/archive the prior attempt, reset the active claim according to `CLAIM_PROTOCOL.md`, update compiled inputs/criteria if necessary, and return the Room to `REWORK`/`READY`.
+A rework preserves the same Room identity but may create a new control snapshot and/or code base.
 
-Do not silently rewrite the objective during rework. A material scope change requires Architect/coordinator action and may require dependency graph revalidation.
+The coordinator may preserve/archive the prior attempt, reset the active claim according to `CLAIM_PROTOCOL.md`, update compiled inputs/criteria if necessary, resolve a new `claim_base_sha`, and return the Room to `REWORK`/`READY` on a new `control_commit_sha`.
+
+Do not silently rewrite the objective during rework. A material scope change requires Architect/coordinator action and may require dependency-graph/authority revalidation.
 
 ## Integration
 
-Accepted output must become durable outside the temporary claim branch before that branch can be deleted. Depending on the project, integration may be:
+Accepted output must become durable outside the temporary claim branch before that branch can be deleted. Depending on project policy, integration may be:
 
-- merge/cherry-pick into the Hotel integration branch;
+- merge/cherry-pick into the Hotel integration ref;
 - coordinator materialization/copy of allowlisted output;
 - accepted artifact publication into canonical project paths;
 - reviewed state/decision update.
@@ -76,4 +85,6 @@ The integration method must not bypass project review/owner gates.
 
 ## Phase closeout
 
-Before Hotel closure, reviewer/coordinator reconciles all accepted/waived Rooms against canonical source and produces the minimal Hotel history record. Only then may temporary Room returns be eligible for demolition under retention policy.
+Before Hotel closure, reviewer/coordinator reconciles all accepted/waived Rooms against canonical source and produces the minimal Hotel history record. That record should preserve enough accepted control/base/head evidence to audit what contract each Room completed without retaining all temporary packets forever.
+
+Only then may temporary Room returns/claim refs become eligible for demolition under retention policy.
