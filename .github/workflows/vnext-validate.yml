@@ -19,8 +19,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Compile validator
-        run: python -m py_compile vnext/tools/validate_hotel.py
+      - name: Compile validators and tests
+        run: |
+          python -m py_compile vnext/tools/validate_hotel.py
+          python -m py_compile vnext/tools/test_validate_hotel.py
 
       - name: Parse JSON documents
         run: |
@@ -44,19 +46,24 @@ jobs:
           root = Path('vnext')
           hotel_schema = json.loads((root/'schemas/HOTEL_MANIFEST.schema.json').read_text())
           room_schema = json.loads((root/'schemas/ROOM_MANIFEST.schema.json').read_text())
+          history_schema = json.loads((root/'schemas/HOTEL_HISTORY.schema.json').read_text())
           hotel = json.loads((root/'examples/minimal-project/hotels/demo-01/HOTEL_MANIFEST.json').read_text())
           r1 = json.loads((root/'examples/minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json').read_text())
           r2 = json.loads((root/'examples/minimal-project/hotels/demo-01/rooms/R002/ROOM_MANIFEST.json').read_text())
 
           Draft202012Validator.check_schema(hotel_schema)
           Draft202012Validator.check_schema(room_schema)
+          Draft202012Validator.check_schema(history_schema)
           Draft202012Validator(hotel_schema).validate(hotel)
           Draft202012Validator(room_schema).validate(r1)
           Draft202012Validator(room_schema).validate(r2)
           print('JSON_SCHEMA_OK')
           PY
 
-      - name: Run cross-file Hotel validator
+      - name: Run positive structural validation
         run: |
           python vnext/tools/validate_hotel.py \
             vnext/examples/minimal-project/hotels/demo-01
+
+      - name: Run validator negative cases
+        run: python vnext/tools/test_validate_hotel.py
