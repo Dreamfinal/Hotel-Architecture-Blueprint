@@ -18,11 +18,13 @@ fetch latest control_ref
 → read compiled packet from control commit
 → read/edit project source on claim branch under allowlists
 → write valid CLAIM/ROOM_RETURN evidence
-→ push/verify returned claim head
+→ push
+→ verify exact remote claim ref head
+→ reviewer derives return_head_sha from that remote ref
 → end Guest session
 ```
 
-Reviewer/coordinator then evaluates the same pinned contract and return regardless of runtime.
+`ROOM_RETURN.json` never self-declares the SHA of the commit that contains it. Reviewer/coordinator evaluates the same pinned contract, actual diff, derived returned head, and return schema regardless of runtime.
 
 ## ChatGPT Guest adapter
 
@@ -53,7 +55,7 @@ Do not use conversation copies as authoritative control state.
 
 ### Return
 
-Write `ROOM_RETURN.json` conforming to `return-vnext-0.1`, verify the remote claim branch head, report branch/head to coordinator, and stop.
+Write schema-valid `ROOM_RETURN.json`, push it with bounded output/evidence, fetch the exact remote fixed claim ref, report the verified branch/head to coordinator, and stop. That verified branch head becomes reviewer-derived `return_head_sha`; it is not embedded in the return JSON itself.
 
 ChatGPT does not need a persistent local machine for the Hotel to remain durable.
 
@@ -69,7 +71,7 @@ Codex may use a local checkout/worktree for richer code/tool execution while obe
 
 ### Occupancy / atomic claim
 
-Create the fixed remote claim ref from `claim_base_sha` using a **non-force** ref creation/push. A rejected non-fast/nonexistent-creation race means the claim was lost; do not force/delete the winner.
+Create the fixed remote claim ref from `claim_base_sha` using a **non-force** ref creation/push. A rejected create race means the claim was lost; do not force/delete the winner.
 
 After creation, fetch/verify the exact remote ref and write/verify the same `CLAIM.json` identity used by ChatGPT.
 
@@ -81,7 +83,7 @@ Run declared checks only when the capability exists and is authorized. Record ex
 
 ### Return
 
-Commit bounded production + return evidence to the fixed claim branch, push without force, fetch/verify the remote head, and stop the Guest session. Temporary worktree cleanup is local housekeeping; remote claim cleanup remains coordinator/Hotel lifecycle authority.
+Commit bounded production + return evidence to the fixed claim branch, push without force, fetch/verify the exact remote head, report that head to coordinator for `return_head_sha`, and stop the Guest session. Temporary worktree cleanup is local housekeeping; remote claim cleanup remains coordinator/Hotel lifecycle authority.
 
 ## Runtime capability matrix
 
@@ -95,6 +97,7 @@ Commit bounded production + return evidence to the fixed claim branch, push with
 | Deterministic local build/test | Only if connected capability exists | Usually available when Room permits |
 | Machine-specific GUI/device work | Connected authorized tool only | Local/authorized tool only |
 | Standard return | `ROOM_RETURN.json` | Same `ROOM_RETURN.json` |
+| Returned-head evidence | Reviewer resolves remote claim ref | Reviewer resolves remote claim ref |
 | Acceptance authority | No (Guest) | No (Guest) |
 
 ## Adapter failure rule
@@ -109,4 +112,5 @@ A Hotel is runtime-portable when:
 2. a different compatible READY Room can be claimed/returned by a Codex Guest;
 3. both returns validate against the same Room/Claim/Return schemas;
 4. both use the same control/claim namespaces and reviewer process;
-5. no Room manifest, Project state, or Hotel lifecycle file requires rewriting because the runtime changed.
+5. reviewer derives returned heads the same way from remote claim refs;
+6. no Room manifest, Project state, or Hotel lifecycle file requires rewriting because the runtime changed.
