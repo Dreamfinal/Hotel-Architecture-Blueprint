@@ -1,0 +1,13 @@
+{
+  "schema_version": "claim-vnext-0.1",
+  "hotel_id": "demo-01",
+  "room_id": "R001",
+  "claim_id": "demo-claim-r001-001",
+  "session_id": "demo-session-001",
+  "claimed_at_utc": "2026-08-21T09:00:00Z",
+  "control_ref": "refs/heads/hotel/demo-01/control",
+  "control_commit_sha": "cccccccccccccccccccccccccccccccccccccccc",
+  "claim_base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "CLAIMED",
+  "head_sha": null
+}

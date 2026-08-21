@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dreamfinal.github.io/hotel-protocol/vnext/RETURN.schema.json",
+  "title": "Hotel Protocol vNext - Guest Room Return",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "hotel_id",
+    "room_id",
+    "claim_id",
+    "session_id",
+    "control_ref",
+    "control_commit_sha",
+    "claim_base_sha",
+    "status",
+    "changed_paths",
+    "allowlist_self_check",
+    "checks_run",
+    "checks_unrun",
+    "output_paths",
+    "unresolved",
+    "requested_next_state"
+  ],
+  "properties": {
+    "schema_version": {"const": "return-vnext-0.1"},
+    "hotel_id": {"type": "string", "minLength": 1},
+    "room_id": {"type": "string", "pattern": "^R[0-9]{3,}$"},
+    "claim_id": {"type": "string", "minLength": 1},
+    "session_id": {"type": "string", "minLength": 1},
+    "control_ref": {"type": "string", "minLength": 1},
+    "control_commit_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "claim_base_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "implementation_commit_sha": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-fA-F]{40}$",
+      "description": "Optional known implementation commit created before writing the final return metadata. The final return/claim-head SHA is derived by the reviewer from the remote claim ref and is never self-declared by this file."
+    },
+    "status": {
+      "enum": ["RETURNED", "IMPLEMENTED_UNVERIFIED", "BLOCKED"]
+    },
+    "changed_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "allowlist_self_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "outside_allowlist_paths"],
+      "properties": {
+        "result": {"enum": ["PASS", "FAIL"]},
+        "outside_allowlist_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "implemented_contract": {"type": "array", "items": {"type": "string"}},
+    "checks_run": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "command", "result", "exit_code"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "command": {"type": "string", "minLength": 1},
+          "result": {"enum": ["PASS", "FAIL"]},
+          "exit_code": {"type": "integer"},
+          "evidence": {"type": "string"}
+        }
+      }
+    },
+    "checks_unrun": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "reason"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "output_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "unresolved": {"type": "array", "items": {"type": "string"}},
+    "requested_next_state": {"enum": ["REVIEW", "REWORK", "BLOCKED"]},
+    "notes": {"type": "string"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "RETURNED"}}, "required": ["status"]},
+      "then": {"properties": {"requested_next_state": {"const": "REVIEW"}}}
+    },
+    {
+      "if": {"properties": {"status": {"const": "BLOCKED"}}, "required": ["status"]},
+      "then": {"properties": {"requested_next_state": {"const": "BLOCKED"}}}
+    },
+    {
+      "if": {
+        "properties": {
+          "allowlist_self_check": {
+            "properties": {"result": {"const": "FAIL"}},
+            "required": ["result"]
+          }
+        },
+        "required": ["allowlist_self_check"]
+      },
+      "then": {"properties": {"requested_next_state": {"const": "REWORK"}}}
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "room-vnext-0.1",
+  "hotel_id": "demo-01",
+  "room_id": "R002",
+  "title": "Consume accepted R001 output",
+  "objective": "Create source/output-b.md after R001 output is accepted and integrated.",
+  "logical_state": "BLOCKED",
+  "depends_on": ["R001"],
+  "claim_base_sha": null,
+  "inputs": [{"path": "hotels/demo-01/rooms/R002/input/r001-accepted.md", "required": true, "purpose": "Dependency context compiled onto the control plane after R001 acceptance; intentionally absent while this Room is BLOCKED."}],
+  "source_read_allowlist": ["source/output-a.md"],
+  "skills": [],
+  "tools": [{"capability": "text-file-edit", "required": true, "notes": "Runtime-neutral file editing capability."}],
+  "authority": {
+    "allowed": ["read accepted R001 output", "read compiled dependency context", "write allowlisted output", "commit/push claim branch"],
+    "forbidden": ["claim before dependency acceptance", "edit R001 output", "merge", "publish/deploy"]
+  },
+  "write_allowlist": ["source/output-b.md"],
+  "return_allowlist": ["hotels/demo-01/rooms/R002/return/"],
+  "checks": [],
+  "acceptance_criteria": [
+    "source/output-b.md exists and is based on the accepted R001 output plus the compiled dependency context.",
+    "R001 accepted source remains unchanged."
+  ],
+  "return_contract": {
+    "schema_version": "return-vnext-0.1",
+    "report_path": "hotels/demo-01/rooms/R002/return/ROOM_RETURN.json",
+    "required_fields": ["hotel_id", "room_id", "claim_id", "session_id", "control_ref", "control_commit_sha", "claim_base_sha", "status", "changed_paths", "allowlist_self_check", "checks_run", "checks_unrun", "output_paths", "unresolved", "requested_next_state"]
+  },
+  "reviewer": "Project Coordinator",
+  "next_to": null,
+  "escalation_conditions": [
+    "R001 is not ACCEPTED/materialized.",
+    "Compiled dependency input is missing.",
+    "claim_base_sha is unresolved.",
+    "Atomic claim ownership cannot be verified."
+  ]
+}
