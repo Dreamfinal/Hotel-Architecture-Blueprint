@@ -12,8 +12,9 @@
     "objective",
     "lifecycle",
     "hotel_base_sha",
+    "final_control_sha",
     "final_integration_sha",
-    "accepted_rooms",
+    "room_results",
     "waived_rooms",
     "durable_outputs",
     "decision_ids",
@@ -29,9 +30,47 @@
     "objective": {"type": "string", "minLength": 1},
     "lifecycle": {"const": "DEMOLISHED"},
     "hotel_base_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "final_control_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
     "final_integration_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
-    "accepted_rooms": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^R[0-9]{3,}$"}},
-    "waived_rooms": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^R[0-9]{3,}$"}},
+    "room_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "room_id",
+          "control_commit_sha",
+          "claim_base_sha",
+          "accepted_head_sha",
+          "integration_sha"
+        ],
+        "properties": {
+          "room_id": {"type": "string", "pattern": "^R[0-9]{3,}$"},
+          "control_commit_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+          "claim_base_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+          "accepted_head_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+          "integration_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+          "attempt_count": {"type": "integer", "minimum": 1},
+          "retained_attempt_refs": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "waived_rooms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["room_id", "decision_id", "reason"],
+        "properties": {
+          "room_id": {"type": "string", "pattern": "^R[0-9]{3,}$"},
+          "decision_id": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    },
     "durable_outputs": {"type": "array", "items": {"type": "string", "minLength": 1}},
     "decision_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
     "closed_at_utc": {"type": "string", "format": "date-time"},
