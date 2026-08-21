@@ -1,0 +1,54 @@
+{
+  "schema_version": "room-vnext-0.1",
+  "hotel_id": "demo-01",
+  "room_id": "R002",
+  "title": "Consume accepted R001 output",
+  "objective": "Create source/output-b.md after R001 output is accepted and integrated.",
+  "logical_state": "BLOCKED",
+  "depends_on": ["R001"],
+  "claim_base_sha": null,
+  "inputs": [
+    {
+      "path": "source/output-a.md",
+      "required": true,
+      "purpose": "Accepted/materialized output from dependency R001."
+    }
+  ],
+  "source_read_allowlist": [
+    "source/output-a.md"
+  ],
+  "skills": [],
+  "tools": [
+    {
+      "capability": "text-file-edit",
+      "required": true,
+      "notes": "Runtime-neutral file editing capability."
+    }
+  ],
+  "authority": {
+    "allowed": ["read accepted R001 output", "write allowlisted output", "commit/push claim branch"],
+    "forbidden": ["claim before dependency acceptance", "edit R001 output", "merge", "publish/deploy"]
+  },
+  "write_allowlist": [
+    "source/output-b.md"
+  ],
+  "return_allowlist": [
+    "hotels/demo-01/rooms/R002/return/"
+  ],
+  "checks": [],
+  "acceptance_criteria": [
+    "source/output-b.md exists and is based on the accepted R001 output.",
+    "R001 accepted source remains unchanged."
+  ],
+  "return_contract": {
+    "report_path": "hotels/demo-01/rooms/R002/return/ROOM_REPORT.md",
+    "required_fields": ["hotel_id", "room_id", "claim_id", "claim_base_sha", "head_sha", "changed_paths", "checks_run", "checks_unrun", "unresolved"]
+  },
+  "reviewer": "Project Coordinator",
+  "next_to": null,
+  "escalation_conditions": [
+    "R001 is not ACCEPTED/materialized.",
+    "claim_base_sha is unresolved.",
+    "Atomic claim ownership cannot be verified."
+  ]
+}
