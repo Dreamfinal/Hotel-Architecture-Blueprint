@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dreamfinal.github.io/hotel-protocol/vnext/CLAIM.schema.json",
+  "title": "Hotel Protocol vNext - Guest Claim Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "hotel_id",
+    "room_id",
+    "claim_id",
+    "session_id",
+    "claimed_at_utc",
+    "control_ref",
+    "control_commit_sha",
+    "claim_base_sha",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {"const": "claim-vnext-0.1"},
+    "hotel_id": {"type": "string", "minLength": 1},
+    "room_id": {"type": "string", "pattern": "^R[0-9]{3,}$"},
+    "claim_id": {"type": "string", "minLength": 1},
+    "session_id": {"type": "string", "minLength": 1},
+    "claimed_at_utc": {"type": "string", "format": "date-time"},
+    "control_ref": {"type": "string", "minLength": 1},
+    "control_commit_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "claim_base_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "status": {
+      "enum": ["CLAIMED", "IN_PROGRESS", "RETURNED", "IMPLEMENTED_UNVERIFIED", "BLOCKED"]
+    },
+    "head_sha": {"type": ["string", "null"], "pattern": "^[0-9a-fA-F]{40}$"}
+  }
+}
