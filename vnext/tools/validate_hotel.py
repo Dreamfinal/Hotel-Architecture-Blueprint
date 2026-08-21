@@ -225,8 +225,8 @@ def main() -> int:
             except ValueError as exc:
                 errors.append(f"Room {room_id} input: {exc}")
                 continue
-            if item.get("required") and not exists:
-                errors.append(f"Room {room_id} required input missing: {item['path']}")
+            if state in CLAIMABLE_STATES and item.get("required") and not exists:
+                errors.append(f"Room {room_id} required input missing at claimable state: {item['path']}")
 
         for skill in room.get("skills", []):
             if not isinstance(skill, dict) or "path" not in skill:
