@@ -25,7 +25,7 @@
   "return_contract": {
     "schema_version": "return-vnext-0.1",
     "report_path": "hotels/demo-01/rooms/R002/return/ROOM_RETURN.json",
-    "required_fields": ["hotel_id", "room_id", "claim_id", "session_id", "control_ref", "control_commit_sha", "claim_base_sha", "head_sha", "status", "changed_paths", "allowlist_self_check", "checks_run", "checks_unrun", "output_paths", "unresolved", "requested_next_state"]
+    "required_fields": ["hotel_id", "room_id", "claim_id", "session_id", "control_ref", "control_commit_sha", "claim_base_sha", "status", "changed_paths", "allowlist_self_check", "checks_run", "checks_unrun", "output_paths", "unresolved", "requested_next_state"]
   },
   "reviewer": "Project Coordinator",
   "next_to": null,
