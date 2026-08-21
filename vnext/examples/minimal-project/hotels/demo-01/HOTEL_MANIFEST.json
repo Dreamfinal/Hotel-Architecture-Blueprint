@@ -12,6 +12,11 @@
   "claim_stale_after_hours": 24,
   "reception_path": "RECEPTION.md",
   "current_state_path": "CURRENT_STATE.md",
+  "forbidden_write_paths": [
+    ".github/",
+    "CURRENT_STATE.md",
+    "DECISION_LOG.md"
+  ],
   "rooms": [
     {
       "room_id": "R001",
