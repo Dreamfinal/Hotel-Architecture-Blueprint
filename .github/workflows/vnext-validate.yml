@@ -1,0 +1,100 @@
+name: Validate Hotel Protocol vNext
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'vnext/**'
+      - '.github/workflows/vnext-validate.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile validators and tests
+        run: |
+          python -m py_compile vnext/tools/validate_hotel.py
+          python -m py_compile vnext/tools/validate_return.py
+          python -m py_compile vnext/tools/test_validate_hotel.py
+          python -m py_compile vnext/tools/test_git_flow.py
+
+      - name: Parse JSON documents
+        run: |
+          python -m json.tool vnext/schemas/HOTEL_MANIFEST.schema.json > /dev/null
+          python -m json.tool vnext/schemas/ROOM_MANIFEST.schema.json > /dev/null
+          python -m json.tool vnext/schemas/CLAIM.schema.json > /dev/null
+          python -m json.tool vnext/schemas/RETURN.schema.json > /dev/null
+          python -m json.tool vnext/schemas/HOTEL_HISTORY.schema.json > /dev/null
+          python -m json.tool vnext/examples/minimal-project/hotels/demo-01/HOTEL_MANIFEST.json > /dev/null
+          python -m json.tool vnext/examples/minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json > /dev/null
+          python -m json.tool vnext/examples/minimal-project/hotels/demo-01/rooms/R002/ROOM_MANIFEST.json > /dev/null
+          python -m json.tool vnext/examples/records/CLAIM.example.json > /dev/null
+          python -m json.tool vnext/examples/records/RETURN.example.json > /dev/null
+          python -m json.tool vnext/examples/records/HOTEL_HISTORY.example.json > /dev/null
+
+      - name: Install JSON Schema validator
+        run: python -m pip install --disable-pip-version-check jsonschema
+
+      - name: Validate examples against schemas
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator, FormatChecker
+
+          root = Path('vnext')
+          schema_dir = root / 'schemas'
+          example_dir = root / 'examples'
+
+          hotel_schema = json.loads((schema_dir/'HOTEL_MANIFEST.schema.json').read_text())
+          room_schema = json.loads((schema_dir/'ROOM_MANIFEST.schema.json').read_text())
+          claim_schema = json.loads((schema_dir/'CLAIM.schema.json').read_text())
+          return_schema = json.loads((schema_dir/'RETURN.schema.json').read_text())
+          history_schema = json.loads((schema_dir/'HOTEL_HISTORY.schema.json').read_text())
+
+          hotel = json.loads((example_dir/'minimal-project/hotels/demo-01/HOTEL_MANIFEST.json').read_text())
+          r1 = json.loads((example_dir/'minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json').read_text())
+          r2 = json.loads((example_dir/'minimal-project/hotels/demo-01/rooms/R002/ROOM_MANIFEST.json').read_text())
+          claim = json.loads((example_dir/'records/CLAIM.example.json').read_text())
+          returned = json.loads((example_dir/'records/RETURN.example.json').read_text())
+          history = json.loads((example_dir/'records/HOTEL_HISTORY.example.json').read_text())
+
+          checker = FormatChecker()
+          for schema in (hotel_schema, room_schema, claim_schema, return_schema, history_schema):
+              Draft202012Validator.check_schema(schema)
+          for schema, value in (
+              (hotel_schema, hotel),
+              (room_schema, r1),
+              (room_schema, r2),
+              (claim_schema, claim),
+              (return_schema, returned),
+              (history_schema, history),
+          ):
+              Draft202012Validator(schema, format_checker=checker).validate(value)
+
+          invalid_scope_return = dict(returned)
+          invalid_scope_return['allowlist_self_check'] = {
+              'result': 'FAIL',
+              'outside_allowlist_paths': ['CURRENT_STATE.md'],
+          }
+          invalid_scope_return['requested_next_state'] = 'REVIEW'
+          if not list(Draft202012Validator(return_schema).iter_errors(invalid_scope_return)):
+              raise SystemExit('RETURN schema should reject REVIEW when allowlist self-check is FAIL')
+
+          print('JSON_SCHEMA_EXAMPLES_OK')
+          PY
+
+      - name: Run positive structural validation
+        run: python vnext/tools/validate_hotel.py vnext/examples/minimal-project/hotels/demo-01
+
+      - name: Run structural validator negative cases
+        run: python vnext/tools/test_validate_hotel.py
+
+      - name: Run real Git control/claim/return flow
+        run: python vnext/tools/test_git_flow.py
