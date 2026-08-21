@@ -1,0 +1,62 @@
+name: Validate Hotel Protocol vNext
+
+on:
+  push:
+    branches:
+      - vnext/runtime-neutral-hotel-protocol
+  pull_request:
+    paths:
+      - 'vnext/**'
+      - '.github/workflows/vnext-validate.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile validator
+        run: python -m py_compile vnext/tools/validate_hotel.py
+
+      - name: Parse JSON documents
+        run: |
+          python -m json.tool vnext/schemas/HOTEL_MANIFEST.schema.json > /dev/null
+          python -m json.tool vnext/schemas/ROOM_MANIFEST.schema.json > /dev/null
+          python -m json.tool vnext/schemas/HOTEL_HISTORY.schema.json > /dev/null
+          python -m json.tool vnext/examples/minimal-project/hotels/demo-01/HOTEL_MANIFEST.json > /dev/null
+          python -m json.tool vnext/examples/minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json > /dev/null
+          python -m json.tool vnext/examples/minimal-project/hotels/demo-01/rooms/R002/ROOM_MANIFEST.json > /dev/null
+
+      - name: Install JSON Schema validator
+        run: python -m pip install --disable-pip-version-check jsonschema
+
+      - name: Validate example manifests against schemas
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from jsonschema import Draft202012Validator
+
+          root = Path('vnext')
+          hotel_schema = json.loads((root/'schemas/HOTEL_MANIFEST.schema.json').read_text())
+          room_schema = json.loads((root/'schemas/ROOM_MANIFEST.schema.json').read_text())
+          hotel = json.loads((root/'examples/minimal-project/hotels/demo-01/HOTEL_MANIFEST.json').read_text())
+          r1 = json.loads((root/'examples/minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json').read_text())
+          r2 = json.loads((root/'examples/minimal-project/hotels/demo-01/rooms/R002/ROOM_MANIFEST.json').read_text())
+
+          Draft202012Validator.check_schema(hotel_schema)
+          Draft202012Validator.check_schema(room_schema)
+          Draft202012Validator(hotel_schema).validate(hotel)
+          Draft202012Validator(room_schema).validate(r1)
+          Draft202012Validator(room_schema).validate(r2)
+          print('JSON_SCHEMA_OK')
+          PY
+
+      - name: Run cross-file Hotel validator
+        run: |
+          python vnext/tools/validate_hotel.py \
+            vnext/examples/minimal-project/hotels/demo-01
