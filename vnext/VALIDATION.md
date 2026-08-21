@@ -1,33 +1,64 @@
 # Deterministic Hotel Validation
 
-Schema validation is necessary but not sufficient. A Hotel may conform to JSON Schema and still be unsafe to open.
+Schema validation is necessary but not sufficient. Hotel vNext uses layered validation so a design can be checked before real Git refs exist without confusing that with authorization to open.
 
-## Hotel-level validation
+## 1. Structural validation
 
-A validator must fail opening when any of these are true:
+Run against a checkout of the intended control packet:
 
-1. Hotel/Room manifest JSON is invalid or unknown required schema version.
-2. Hotel ID in a Room differs from its parent Hotel.
-3. Room IDs are duplicated or manifest paths do not exist.
-4. A dependency references a missing Room.
-5. The dependency graph contains a cycle.
-6. A Room depends on itself.
-7. A Room marked `READY` has unresolved/null `claim_base_sha`.
-8. A `claim_base_sha` or `hotel_base_sha` does not resolve to a commit reachable/available to the execution substrate.
-9. Required Room input or Room-local skill paths are missing.
-10. A path is both forbidden by project policy and allowlisted by a Room.
-11. Two simultaneously dependency-ready Rooms have overlapping production `write_allowlist` paths without an explicit serialization dependency/coordinator-owned integration exception.
-12. A Room's return report path is not covered by `return_allowlist`.
-13. Reception lists a Room as dependency-ready when its dependencies are not accepted/materialized.
-14. Reception omits a dependency-ready Room without an explicit hold/block reason.
-15. Claim prefix does not match the Hotel ID or collides with active state from another Hotel instance.
-16. `claims_enabled=true` while lifecycle is anything other than `OPEN`.
-17. lifecycle is `OPEN` while `claims_enabled=false`, unless an explicit closing transition is being committed atomically.
-18. project `CURRENT_STATE.md` points to a different active Hotel/phase at opening time.
+```text
+python vnext/tools/validate_hotel.py <hotel-dir>
+```
 
-## Write overlap semantics
+This checks cross-file invariants including:
 
-Path overlap must account for ancestor/descendant relationships, not only literal equality.
+- Hotel/Room IDs and standard manifest/entry paths;
+- dependency references, exact edge agreement, self-dependency, and cycles;
+- logical readiness and resolved base shape for claimable Rooms;
+- compiled Room input/skill packet locations and required existence when claimable;
+- repo-relative path safety, traversal/symlink escape, and no glob semantics;
+- Hotel-wide `forbidden_write_paths` vs Room production/return writes;
+- simultaneous claimable-Room production write overlap;
+- return-report coverage by return allowlist;
+- dependency-ready Rooms present in Reception;
+- root `CURRENT_STATE.md` existence.
+
+Structural success means the packet is internally coherent. It does **not** prove that Git refs/SHA values exist or that remote claim branches are vacant.
+
+## 2. Git opening validation
+
+Before a real opening, run from the exact local checkout of the Hotel's `control_ref`:
+
+```text
+python vnext/tools/validate_hotel.py <hotel-dir> --check-git-refs
+```
+
+In addition to structural checks, this verifies:
+
+- checkout `HEAD` equals the resolved local `control_ref` head;
+- `hotel_base_sha` resolves to a commit;
+- every non-null Room `claim_base_sha` resolves to a commit;
+- `integration_ref` resolves to a commit;
+- each claimable `source_read_allowlist` path exists in that Room's `claim_base_sha` tree.
+
+Compiled `inputs/` and Room-local `skills/` are validated on the control checkout because they belong to the pinned control packet, not the claim code-base commit.
+
+## 3. Remote opening checks
+
+The coordinator/opening implementation must additionally verify against the remote substrate immediately before enabling claims:
+
+- intended `control_ref` and `integration_ref` remote tips match the commits just validated/pushed under project policy;
+- no fixed active claim ref exists under this new Hotel's `claim_prefix`;
+- retained archive/attempt refs use a different namespace;
+- no stale prior Hotel instance collides with the same Hotel ID/ref namespace;
+- project `CURRENT_STATE.md` identifies the intended active Hotel/control pointer;
+- the opening control commit is remotely visible before any Guest receives claim permission.
+
+These checks require remote Git/GitHub state and are intentionally not faked by structural validation.
+
+## 4. Write overlap semantics
+
+Path overlap accounts for ancestor/descendant relationships, not only literal equality.
 
 Examples that conflict:
 
@@ -41,52 +72,52 @@ src/App.tsx
 src/App.tsx
 ```
 
-Two Rooms may read the same source. They may not concurrently write the same production surface unless the Hotel explicitly serializes them.
+Two Rooms may read the same source. They may not concurrently write the same production surface. If a temporary hold is needed, represent that Room as `BLOCKED` rather than pretending it is READY.
 
-Return-only paths under different Room packets do not count as production write conflicts.
+Return-only paths under distinct Room packets normally do not conflict, but they are still subject to Hotel-wide forbidden write paths.
 
-## Dependency-ready calculation
+## 5. Dependency-ready calculation
 
 A Room is dependency-ready iff:
 
 ```text
 logical_state in {READY, REWORK}
 AND all depends_on Rooms are ACCEPTED
-AND dependency outputs required by this Room are materialized
+AND dependency outputs required by this Room are integrated/materialized
+AND required compiled Room inputs exist on control plane
 AND claim_base_sha is resolved
-AND no explicit coordinator hold exists
 ```
 
-Live occupancy is then determined separately from the fixed remote claim ref.
+Live occupancy is then determined separately by the fixed remote claim ref.
 
-## Claim/ref checks at opening
+## 6. Dual-pin validation
 
-Before opening:
+A real Guest contract uses:
 
-- no fixed active claim ref may already exist for a Room in this new Hotel instance;
-- retained archive refs must use a different namespace from active claim refs;
-- the configured integration ref must resolve;
-- every initially READY Room's base must be compatible with the integration plan.
+- `control_commit_sha`: exact control-ref commit containing Reception/Room packet;
+- `claim_base_sha`: exact project code/integration commit used to create the claim branch.
 
-## Closure validation
+The manifest declares `claim_base_sha`; the Guest derives and records `control_commit_sha` from the fetched control-ref head. This avoids impossible Git self-reference while pinning both contract and code.
+
+## 7. Closure validation
 
 Before `CLOSED`:
 
-- all required Rooms are `ACCEPTED` or explicitly waived in durable project decisions;
+- all required Rooms are `ACCEPTED` or explicitly waived by durable owner decision;
 - accepted outputs are integrated/materialized;
 - no accepted output exists only on a temporary claim branch;
 - current project state and decisions are refreshed;
-- the proposed history record matches Hotel ID, phase, base, final integration/source commit, accepted/waived Rooms, and retention outcome.
+- Room acceptance records preserve control/base/head/integration evidence;
+- the proposed Hotel history matches Hotel ID, phase, base, final control/integration commits, Room results/waivers, and retention outcome.
 
-## Demolition validation
+## 8. Demolition validation
 
 Before removing execution scaffolding:
 
-- Hotel is `CLOSED`;
-- claims are disabled;
+- Hotel is `CLOSED` and claims are disabled;
 - required claim/attempt tips are preserved according to retention policy;
 - `hotels/history/<hotel-id>.json` exists and is committed;
-- `CURRENT_STATE.md` no longer presents the Hotel as active after the demolition commit;
+- `CURRENT_STATE.md` no longer presents the completed Hotel as active after demolition;
 - deletion set contains only approved temporary Hotel material.
 
 Validation is deterministic evidence. It does not replace domain review of Room outputs.
