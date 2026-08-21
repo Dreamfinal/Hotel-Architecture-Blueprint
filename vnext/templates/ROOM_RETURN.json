@@ -1,0 +1,24 @@
+{
+  "schema_version": "return-vnext-0.1",
+  "hotel_id": "<HOTEL_ID>",
+  "room_id": "<ROOM_ID>",
+  "claim_id": "<CLAIM_ID>",
+  "session_id": "<SESSION_ID>",
+  "control_ref": "<CONTROL_REF>",
+  "control_commit_sha": "<40_HEX_CONTROL_SHA>",
+  "claim_base_sha": "<40_HEX_BASE_SHA>",
+  "head_sha": "<40_HEX_RETURNED_HEAD_SHA>",
+  "status": "RETURNED",
+  "changed_paths": [],
+  "allowlist_self_check": {
+    "result": "PASS",
+    "outside_allowlist_paths": []
+  },
+  "implemented_contract": [],
+  "checks_run": [],
+  "checks_unrun": [],
+  "output_paths": [],
+  "unresolved": [],
+  "requested_next_state": "REVIEW",
+  "notes": ""
+}
