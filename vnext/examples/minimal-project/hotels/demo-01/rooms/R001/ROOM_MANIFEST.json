@@ -1,0 +1,68 @@
+{
+  "schema_version": "room-vnext-0.1",
+  "hotel_id": "demo-01",
+  "room_id": "R001",
+  "title": "Produce first demo output",
+  "objective": "Create source/output-a.md using only the compiled demo input.",
+  "logical_state": "READY",
+  "depends_on": [],
+  "claim_base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "inputs": [
+    {
+      "path": "source/input.md",
+      "required": true,
+      "purpose": "Compiled source input for this Room."
+    }
+  ],
+  "source_read_allowlist": [
+    "source/input.md"
+  ],
+  "skills": [
+    {
+      "path": "hotels/demo-01/rooms/R001/skills/example/SKILL.md",
+      "required": true,
+      "purpose": "Room-local execution method; no Team Repo required."
+    }
+  ],
+  "tools": [
+    {
+      "capability": "text-file-edit",
+      "required": true,
+      "notes": "Any runtime may satisfy this capability."
+    }
+  ],
+  "authority": {
+    "allowed": ["read declared input", "write allowlisted output", "commit/push claim branch"],
+    "forbidden": ["edit unrelated source", "merge", "delete foreign refs", "publish/deploy"]
+  },
+  "write_allowlist": [
+    "source/output-a.md"
+  ],
+  "return_allowlist": [
+    "hotels/demo-01/rooms/R001/return/"
+  ],
+  "checks": [
+    {
+      "id": "output-exists",
+      "command": "python -c \"from pathlib import Path; assert Path('source/output-a.md').is_file()\"",
+      "required": false,
+      "expected_exit_code": 0,
+      "requires_capability": "python"
+    }
+  ],
+  "acceptance_criteria": [
+    "source/output-a.md exists and is derived only from the declared input.",
+    "No path outside production/return allowlists changed."
+  ],
+  "return_contract": {
+    "report_path": "hotels/demo-01/rooms/R001/return/ROOM_REPORT.md",
+    "required_fields": ["hotel_id", "room_id", "claim_id", "claim_base_sha", "head_sha", "changed_paths", "checks_run", "checks_unrun", "unresolved"]
+  },
+  "reviewer": "Project Coordinator",
+  "next_to": "R002",
+  "escalation_conditions": [
+    "Declared input is missing or contradictory.",
+    "Required output would need a path outside write_allowlist.",
+    "Atomic claim ownership cannot be verified."
+  ]
+}
