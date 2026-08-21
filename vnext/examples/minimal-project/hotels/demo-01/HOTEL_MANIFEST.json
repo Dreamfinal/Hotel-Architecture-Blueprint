@@ -1,0 +1,36 @@
+{
+  "schema_version": "hotel-vnext-0.1",
+  "protocol_version": "vnext-0.1",
+  "hotel_id": "demo-01",
+  "phase_id": "demo",
+  "objective": "Demonstrate one independent Room followed by one dependent Room.",
+  "lifecycle": "READY_TO_OPEN",
+  "claims_enabled": false,
+  "hotel_base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "integration_ref": "refs/heads/hotel/demo-01/integration",
+  "claim_prefix": "hotel/demo-01/claims/",
+  "claim_stale_after_hours": 24,
+  "reception_path": "RECEPTION.md",
+  "current_state_path": "CURRENT_STATE.md",
+  "rooms": [
+    {
+      "room_id": "R001",
+      "manifest_path": "hotels/demo-01/rooms/R001/ROOM_MANIFEST.json"
+    },
+    {
+      "room_id": "R002",
+      "manifest_path": "hotels/demo-01/rooms/R002/ROOM_MANIFEST.json"
+    }
+  ],
+  "dependency_edges": [
+    {"from": "R001", "to": "R002"}
+  ],
+  "retention": {
+    "history_record": "KEEP",
+    "claim_refs": "ARCHIVE_REQUIRED_ONLY",
+    "room_packets": "DELETE_AFTER_DEMOLITION",
+    "working_branches": "ARCHIVE_REQUIRED_ONLY"
+  },
+  "opened_at_utc": null,
+  "closed_at_utc": null
+}
