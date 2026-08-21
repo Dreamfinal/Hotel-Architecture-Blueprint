@@ -7,9 +7,10 @@
   "control_ref": "refs/heads/hotel/demo-01/control",
   "control_commit_sha": "cccccccccccccccccccccccccccccccccccccccc",
   "claim_base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "head_sha": "1111111111111111111111111111111111111111",
+  "implementation_commit_sha": "1111111111111111111111111111111111111111",
   "status": "RETURNED",
   "changed_paths": [
+    "hotels/demo-01/rooms/R001/return/CLAIM.json",
     "source/output-a.md",
     "hotels/demo-01/rooms/R001/return/ROOM_RETURN.json"
   ],
@@ -35,5 +36,5 @@
   ],
   "unresolved": [],
   "requested_next_state": "REVIEW",
-  "notes": "Example only; SHAs are placeholders and do not represent a real claim."
+  "notes": "The reviewer derives return_head_sha from the exact remote claim ref after this JSON is committed; the return file never self-declares its own containing commit SHA."
 }
