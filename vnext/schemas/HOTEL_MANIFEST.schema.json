@@ -17,6 +17,7 @@
     "claim_prefix",
     "reception_path",
     "current_state_path",
+    "forbidden_write_paths",
     "rooms",
     "dependency_edges",
     "retention"
@@ -37,6 +38,11 @@
     "claim_stale_after_hours": {"type": ["number", "null"], "exclusiveMinimum": 0},
     "reception_path": {"type": "string", "pattern": "(^|/)RECEPTION\\.md$"},
     "current_state_path": {"const": "CURRENT_STATE.md"},
+    "forbidden_write_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
     "rooms": {
       "type": "array",
       "minItems": 1,
