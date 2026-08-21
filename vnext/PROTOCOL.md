@@ -2,13 +2,13 @@
 
 ## 1. Purpose
 
-Hotel is a Git-native execution protocol for disposable Guest workers. It turns one bounded project phase into Rooms that can be claimed, executed, returned, reviewed, integrated, closed, and demolished without requiring persistent chat context or permanent agent identity.
+Hotel is a Git-native execution protocol for disposable Guest workers. One bounded project phase becomes Rooms that can be claimed, executed, returned, reviewed, integrated, closed, and demolished without persistent chat context or permanent Guest identity.
 
 A correct Hotel optimizes for **small context + explicit authority + durable evidence + safe concurrency**.
 
 ## 2. Project layout
 
-A migrated Project Repo keeps durable truth at root:
+A migrated Project Repo keeps durable project truth at root:
 
 ```text
 Project/
@@ -34,47 +34,86 @@ Project/
       └─ <hotel-id>.json
 ```
 
-`hotels/<hotel-id>/` is execution scaffolding. `hotels/history/<hotel-id>.json` is the minimal durable completion/audit record left after demolition.
+`hotels/<hotel-id>/` is temporary execution/control scaffolding. `hotels/history/<hotel-id>.json` is the minimal durable completion/audit record retained after demolition.
 
-## 3. Durable sources of truth
+## 3. Durable project truth
 
 - `DESIGN_SPEC.md`: what the project/product is.
 - `ROADMAP.md`: durable phase structure and future direction.
-- `CURRENT_STATE.md`: current phase, active Hotel, work in progress, blockers, next action, and pointers.
+- `CURRENT_STATE.md`: current phase, active Hotel/control pointer, blockers, next action, and canonical pointers.
 - `DECISION_LOG.md`: durable decisions and rationale.
 - project source/artifacts: actual accepted output.
-- `HOTEL_MANIFEST.json`: one Hotel's execution contract while that Hotel exists.
-- `ROOM_MANIFEST.json`: one Room's execution contract while that Room exists.
+- while Hotel exists: its control-plane manifests/Reception and accepted integration commits are durable execution evidence.
 
-Chat history, Staff memory, Rin envelopes, local worktrees, generated prompts, and temporary Guest reports are not canonical project truth.
+Chat history, Staff memory, Rin envelopes, local worktrees, copied prompts, generated scratch, and unintegrated Guest reports are not canonical project truth.
 
-## 4. Hotel state model
+## 4. Three Git anchors
 
-Hotel lifecycle:
+See `CONTROL_PLANE.md` for the full control contract.
+
+### `hotel_base_sha`
+
+Immutable audit origin where Hotel construction began.
+
+### `control_ref`
+
+Moving authoritative ref for Hotel lifecycle, Reception, Room manifests, compiled Room inputs/skills, dependency readiness, and resolved Room bases.
+
+A Guest always fetches the latest remote `control_ref` before selecting work and records its exact head as `control_commit_sha`.
+
+### `integration_ref`
+
+Moving ref/line where coordinator-reviewed accepted production output is materialized.
+
+`control_ref` and `integration_ref` may be the same ref in a simple project, but their responsibilities remain distinct.
+
+## 5. Dual-pin Guest contract
+
+Every active Guest run is bound to:
 
 ```text
-DRAFT
-  ↓
-VALIDATED
-  ↓
-READY_TO_OPEN
-  ↓
-OPEN
-  ↓
-CLOSING
-  ↓
-CLOSED
-  ↓
-DEMOLISHED
+control_commit_sha
+= exact immutable Room contract/context snapshot
+
+claim_base_sha
+= exact immutable project code/integration base
 ```
 
-- `DRAFT`: architecture may change; claims forbidden.
-- `VALIDATED`: manifests, graph, inputs, authority, paths, and schema pass validation.
-- `READY_TO_OPEN`: immutable/pinned opening inputs are prepared and baseline/integration refs exist.
-- `OPEN`: `claims_enabled=true`; dependency-ready Rooms may be claimed.
-- `CLOSING`: no new claims; outstanding returns/reviews/integration are reconciled.
-- `CLOSED`: all required Rooms are accepted/integrated and closure evidence is complete.
-- `DEMOLISHED`: temporary Hotel packets/refs/worktrees are removed under retention policy; minimal history + project truth remain.
+The Room manifest declares `claim_base_sha` on the control plane. The Guest derives `control_commit_sha` from the fetched control-ref head.
+
+This separation is required: putting a manifest inside the same commit whose hash it declares as its own base would create impossible Git self-reference.
+
+### Read locations
+
+From `control_commit_sha`:
+
+- `RECEPTION.md`;
+- `ROOM_MANIFEST.json`;
+- `START_HERE.md`;
+- compiled Room `input/`;
+- Room-local `skills/`.
+
+From the claim branch initialized at `claim_base_sha`:
+
+- project paths in `source_read_allowlist`;
+- production paths in `write_allowlist`;
+- Room return/claim evidence allowed by `return_allowlist`.
+
+Later control/integration movement cannot silently change an already-claimed Guest's contract or code base.
+
+## 6. Hotel lifecycle
+
+```text
+DRAFT → VALIDATED → READY_TO_OPEN → OPEN → CLOSING → CLOSED → DEMOLISHED
+```
+
+- `DRAFT`: Hotel/Rooms may change; claims forbidden.
+- `VALIDATED`: schema + cross-file structural validation pass.
+- `READY_TO_OPEN`: control packet is complete enough to open; initially-ready Room bases/inputs are resolved.
+- `OPEN`: opening control commit is remotely verified and `claims_enabled=true`.
+- `CLOSING`: claims disabled first; returns/review/integration reconcile.
+- `CLOSED`: required Rooms accepted/integrated or explicitly waived and project truth refreshed.
+- `DEMOLISHED`: approved temporary control/claim/worktree material removed; minimal Hotel history remains.
 
 Room logical lifecycle:
 
@@ -85,135 +124,139 @@ DRAFT → BLOCKED / READY → CLAIMED → IN_PROGRESS → RETURNED → REVIEW
                                                        ↘ BLOCKED
 ```
 
-Execution may additionally derive `STALE` from an abandoned claim. Recovery is a coordinator/housekeeping action, not a Guest action.
+`STALE` is a derived abandoned-claim condition handled only by coordinator/housekeeping recovery.
 
-## 5. Dependency model
+## 7. Dependency model
 
-Rooms form a directed acyclic work graph unless the Hotel explicitly declares an iteration loop outside the dependency graph.
-
-A Room becomes `READY` only when:
+Room dependencies form a DAG. A Room becomes `READY` only when:
 
 1. every `depends_on` Room is `ACCEPTED`;
-2. required dependency output has been integrated/materialized into the Hotel integration ref or compiled into this Room's input packet;
-3. the Room's `claim_base_sha` is resolved;
-4. source/context inputs exist;
-5. its write scope does not conflict with any concurrently claimable Room;
-6. opening/Room validators pass.
+2. required upstream output is integrated/materialized;
+3. required dependency context is compiled into this Room's control-plane `input/` packet;
+4. Room `claim_base_sha` resolves to the intended code/integration commit;
+5. required source paths exist in that claim-base tree;
+6. Room authority/write scope remains safe against other simultaneously-ready Rooms;
+7. control-plane validation passes.
 
-### Hotel baseline vs Room claim base
+### Downstream transition
 
-`hotel_base_sha` is the immutable starting point for Hotel construction/audit.
+After upstream acceptance, coordinator:
 
-`claim_base_sha` is per Room. For independent Rooms it may equal `hotel_base_sha`. For dependent Rooms it may be a later integration commit containing accepted dependency output.
+1. integrates output on `integration_ref`;
+2. compiles downstream packet context on `control_ref`;
+3. sets downstream `claim_base_sha` to the relevant integration commit;
+4. changes Room from `BLOCKED` to `READY`;
+5. refreshes Reception;
+6. pushes/verifies the new control commit.
 
-This preserves a stable Hotel origin while allowing downstream Rooms to consume accepted upstream work without rebuilding the Hotel.
+A fresh Guest can claim the downstream Room only after that verified control transition.
 
-## 6. Reception
+## 8. Reception
 
-`RECEPTION.md` is the Guest-facing front desk. It must be compact and contain only:
+Reception is the compact Guest-facing front desk on `control_ref`. It contains only:
 
-- Hotel ID / phase objective;
-- lifecycle and whether claims are enabled;
-- claim prefix and claim procedure pointer;
-- Rooms that are dependency-ready, with one-line objective and Room entry path;
-- blocked Rooms with only their blocking Room IDs/reason;
-- explicit instruction not to load Team Repo, whole project history, Blueprint, or unrelated Rooms.
+- Hotel ID, `control_ref`, phase objective;
+- lifecycle + claims enabled state;
+- claim prefix/procedure pointer;
+- dependency-ready Rooms with one-line objective/entry path;
+- blocked Rooms with short blocker/dependency reason;
+- instruction not to load Team Repo, project history, Blueprint, or unrelated Rooms.
 
-Reception is not the authoritative occupancy lock. **Remote claim refs are authoritative for occupancy.** A Guest may perform one prefix-filtered remote claim listing after reading Reception.
+Reception is dependency-readiness/control evidence, not occupancy lock. **Fixed remote claim refs are authoritative for live occupancy.**
 
-## 7. Room packet
+## 9. Room packet
 
-A fresh Guest must be able to execute a Room from:
-
-1. root `AGENTS.md` only to learn project-wide safety that applies to all work;
-2. `RECEPTION.md`;
-3. the claimed Room `START_HERE.md`;
-4. the Room manifest and its declared inputs/skills/source paths.
-
-A Room packet compiles context rather than dumping raw project history. It must specify:
+A Room packet is architect-compiled context, not a raw project dump. It defines:
 
 - measurable objective;
-- `depends_on` and `claim_base_sha`;
-- input/context files;
-- read/source allowlist;
-- write allowlist;
-- Room-local skill payloads;
-- tool requirements and runtime capability assumptions;
+- dependencies + `claim_base_sha`;
+- compiled `input/` paths on control plane;
+- project `source_read_allowlist` on claim base;
+- Room-local skills on control plane;
+- tool capability requirements;
 - allowed/forbidden authority;
+- Hotel-wide forbidden writes + Room write/return allowlists;
 - deterministic checks;
 - acceptance criteria;
-- reviewer/return routing;
-- required return artifacts/evidence;
+- reviewer/next routing;
+- required return fields/evidence;
 - escalation conditions.
 
-## 8. Skills and tools
+A fresh Guest must not need Team Repo or unrelated project/Hotel context to execute it.
 
-Room Skills are copied/compiled into the Project/Room packet. A Guest must not require Team Repo access to use them.
+## 10. Skills, tools, and authority
 
-Tool availability does not grant authority. A Room may say a tool is required or optional, but authority is the intersection of:
+Room Skills are copied/compiled into the Project/Room packet. Guests must not need Team Repo access.
+
+Tool access never grants authority. Effective authority is:
 
 ```text
 Project policy
 ∩ Hotel policy
+∩ Hotel forbidden-write boundary
 ∩ Room authority
-∩ write/read allowlists
+∩ Room read/write/return allowlists
 ∩ owner/runtime safety constraints
 ```
 
-If a runtime lacks a required tool, the Guest returns `BLOCKED` or an explicitly allowed `IMPLEMENTED_UNVERIFIED`; it must not invent validation evidence.
+Unavailable required capability produces an authorized `IMPLEMENTED_UNVERIFIED` or `BLOCKED` return; never fabricated validation.
 
-## 9. Concurrency and write ownership
+## 11. Concurrency
 
-Default policy is **no overlapping write allowlists among simultaneously claimable Rooms**.
+Default rule: simultaneously claimable Rooms must not have overlapping production write allowlists.
 
-If overlap is unavoidable, the Hotel must serialize those Rooms through dependencies or declare a coordinator-owned integration surface that Guests cannot edit directly.
+If overlap is unavoidable, serialize those Rooms through dependency/block state or use a coordinator-owned integration surface Guests cannot edit.
 
-Room source inputs are read-only unless also explicitly allowlisted for write.
+Rooms may read the same source. Packet inputs/skills are read-only. Accepted dependency outputs are read-only to downstream Rooms unless explicitly allowlisted for modification.
 
-## 10. Return and review
+## 12. Claim / return / acceptance
 
-A Guest returns through the same claim branch. Required evidence includes at least:
+Claim branch:
 
-- room/hotel IDs;
-- claim/session identifier;
-- claim base and head commit;
-- changed paths;
-- write-allowlist self-check;
-- checks actually run + exit/result;
-- checks not run and why;
-- output paths;
-- unresolved risks/contradictions;
-- requested next state.
+```text
+hotel/<hotel-id>/claims/<room-id>
+```
 
-Only the designated reviewer/coordinator may mark a Room `ACCEPTED` and integrate it. A successful push is delivery evidence, not acceptance.
+Non-force creation from `claim_base_sha` is the atomic occupancy lock and working/return branch. Claim record preserves `control_ref`, `control_commit_sha`, and `claim_base_sha`.
 
-## 11. Project current state
+Guest return preserves the same dual pins + final head and evidence. Reviewer reloads the exact Room contract from the pinned control commit.
 
-While a Hotel is active, root `CURRENT_STATE.md` points to the active Hotel/phase and states the next coordinator/owner action. It must not duplicate Room-by-Room transcripts.
+```text
+push != acceptance
+acceptance != integration
+integration != downstream readiness
+integration != Hotel closure
+```
 
-When the Hotel closes, accepted durable outcomes are reflected in source, `CURRENT_STATE.md`, `DECISION_LOG.md`, `DESIGN_SPEC.md`, and/or `ROADMAP.md` as appropriate before demolition.
+See `CLAIM_PROTOCOL.md` and `RETURN_PROTOCOL.md`.
 
-## 12. Runtime portability
+## 13. Current state and closure
 
-The contract is runtime-neutral:
+While a Hotel is active, root `CURRENT_STATE.md` identifies the active Hotel/control pointer and next coordinator/owner action. It does not duplicate Room transcripts/occupancy.
+
+Before closure, accepted durable output/state is absorbed into project source and, when relevant, `CURRENT_STATE.md`, `DECISION_LOG.md`, `DESIGN_SPEC.md`, or `ROADMAP.md`.
+
+After closure gates pass, demolition retains `hotels/history/<hotel-id>.json` with per-Room control/base/head/integration evidence and removes temporary material according to retention policy.
+
+## 14. Runtime portability
 
 ```text
 Project Repo
-  ├─ ChatGPT Guest → GitHub refs/files
-  └─ Codex Guest   → local Git/GitHub refs/files
+  ├─ ChatGPT Guest → GitHub control/claim refs + files
+  └─ Codex Guest   → local Git/GitHub control/claim refs + files
 ```
 
-Both paths obey the same Room manifest, claim ref namespace, allowlists, return contract, and review states. No architecture rewrite is required when switching runtime.
+Both obey the same control snapshot, Room manifest, claim namespace, source/write boundaries, return contract, and review state. Runtime switching does not rewrite project state.
 
-## 13. Non-goals
+## 15. Non-goals
 
 Hotel vNext does not require:
 
 - Rin runtime;
 - permanent Guest identity/memory;
-- a local always-on process;
+- an always-on local process;
 - GitHub Actions;
 - a central LLM orchestrator;
 - Team Repo access by Guests.
 
-Optional Actions/scheduled tasks may later observe or validate Hotel state, but Git/GitHub project state remains authoritative.
+Actions/scheduled tasks may optionally validate/observe state, but Git/GitHub Project state remains authoritative.
