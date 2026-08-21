@@ -11,7 +11,7 @@
     {
       "path": "source/output-a.md",
       "required": true,
-      "purpose": "Accepted/materialized output from dependency R001."
+      "purpose": "Accepted/materialized output from dependency R001; the path is expected on the future claim base after dependency integration."
     }
   ],
   "source_read_allowlist": [
@@ -42,7 +42,7 @@
   ],
   "return_contract": {
     "report_path": "hotels/demo-01/rooms/R002/return/ROOM_REPORT.md",
-    "required_fields": ["hotel_id", "room_id", "claim_id", "claim_base_sha", "head_sha", "changed_paths", "checks_run", "checks_unrun", "unresolved"]
+    "required_fields": ["hotel_id", "room_id", "claim_id", "control_ref", "control_commit_sha", "claim_base_sha", "head_sha", "changed_paths", "checks_run", "checks_unrun", "unresolved"]
   },
   "reviewer": "Project Coordinator",
   "next_to": null,
