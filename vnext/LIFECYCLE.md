@@ -15,35 +15,35 @@ Performed by permanent Staff / Architect, not an ordinary Guest.
 
 ### Design outputs
 
-- `HOTEL_MANIFEST.json`;
+- `HOTEL_MANIFEST.json` including `control_ref`, `integration_ref`, `forbidden_write_paths`, and retention policy;
 - dependency graph;
 - `RECEPTION.md` draft;
-- one complete Room packet per planned Room;
-- compiled Room skills/loadouts;
+- one Room manifest + `START_HERE.md` per planned Room;
+- compiled Room `input/` and `skills/` available now or explicit BLOCKED dependency-produced packet requirements;
 - authority/write ownership map;
-- deterministic Hotel/Room validation result.
+- deterministic validation result.
 
 ### Design rule
 
-A Room is not complete merely because it has a task title. A fresh Guest must be able to execute it without studying the full project or Team Repo.
+A Room is not complete merely because it has a task title. A fresh Guest must be able to execute a READY Room from its pinned control packet + claim-base source without studying the full project or Team Repo.
 
 ## B. Validate / Ready to Open
 
 Before `READY_TO_OPEN`, verify:
 
 1. manifests conform to schema;
-2. Room IDs/dependencies form a valid graph;
+2. Room IDs/dependencies form a valid DAG and manifest/entry paths are complete;
 3. every dependency refers to a real Room;
 4. all initially READY Rooms have resolved `claim_base_sha`;
-5. all required inputs/source paths exist;
-6. Room packets contain objective, context, loadout, authority, write allowlist, checks, acceptance, return, and escalation contract;
-7. simultaneously claimable Rooms have no forbidden write overlap;
-8. Room-local skills exist without requiring Team Repo;
-9. `hotel_base_sha` exists and identifies the intended immutable opening origin;
-10. integration ref/branch exists when the Hotel uses one;
-11. Reception matches dependency readiness;
-12. claim namespace/prefix is reserved for this Hotel and no stale prior-Hotel refs collide;
-13. project `CURRENT_STATE.md` is ready to point to this Hotel when opened.
+5. all required compiled inputs/skills for initially READY Rooms exist on control plane;
+6. required source-read paths for initially READY Rooms exist in their claim-base trees;
+7. Room packets contain objective, context, loadout, authority, write/return allowlists, checks, acceptance, return, and escalation contract;
+8. simultaneously claimable Rooms have no production write overlap and no Room write overlaps Hotel-wide forbidden paths;
+9. `hotel_base_sha` identifies the intended immutable Hotel origin;
+10. intended `control_ref` and `integration_ref` strategy is explicit;
+11. Reception matches dependency readiness and states its control ref;
+12. claim namespace is reserved for this Hotel and remote collision checks are defined;
+13. project `CURRENT_STATE.md` is ready to point to the active Hotel/control ref when opened.
 
 Validation success moves `DRAFT → VALIDATED → READY_TO_OPEN`. Claims remain disabled.
 
@@ -51,88 +51,100 @@ Validation success moves `DRAFT → VALIDATED → READY_TO_OPEN`. Claims remain 
 
 Opening is a coordinator/owner-authorized control transition:
 
-1. revalidate the exact content being opened;
-2. pin `hotel_base_sha` and any initial Room `claim_base_sha` values;
-3. set lifecycle `OPEN` and `claims_enabled=true` in Hotel control state;
-4. publish/update Reception;
-5. update project `CURRENT_STATE.md` with active Hotel ID, phase, current gate, and next action;
-6. commit/push the opening control state;
-7. verify the remote opening commit/ref;
-8. only after remote verification may Guests claim Rooms.
+1. commit the exact intended control packet on `control_ref`;
+2. run structural + Git opening validation on that exact control-ref head;
+3. verify `hotel_base_sha`, initial READY Room `claim_base_sha` values, and integration ref;
+4. perform remote opening checks, including absence of active claim refs for this Hotel instance;
+5. set lifecycle `OPEN` + `claims_enabled=true` and refresh Reception on `control_ref`;
+6. update project `CURRENT_STATE.md` with active Hotel ID/phase/control pointer and next action under project policy;
+7. commit/push the opening control/project state;
+8. verify the exact remote `control_ref` opening commit and project pointer;
+9. only then may Guests claim Rooms.
 
-A copied prompt, chat statement, old lobby, or unpushed local file cannot open a Hotel.
+A copied prompt, chat statement, old Reception, stale local branch, or unpushed file cannot open a Hotel.
 
-## D. Execution
+## D. Guest execution
 
 While OPEN:
 
-- Guests claim exactly one dependency-ready Room through the atomic claim protocol;
-- Guest writes stay within Room authority/allowlists;
-- returns are delivered on claim branches;
-- reviewer/coordinator verifies checks, diff scope, acceptance criteria, and domain quality;
-- accepted output is integrated/materialized into the Hotel integration line/project source;
-- dependent Room bases are resolved only after required upstream acceptance/integration;
-- Reception/control state is refreshed when dependency readiness changes materially;
-- project `CURRENT_STATE.md` stays concise and points to the Hotel rather than copying Room transcripts.
+- Guest fetches latest remote `control_ref` and pins `control_commit_sha` before selecting a Room;
+- Guest atomically creates exactly one fixed claim branch from that Room's `claim_base_sha`;
+- claim record preserves `control_ref`, `control_commit_sha`, `claim_base_sha`, session/claim identity;
+- Room packet inputs/skills are read from pinned control commit;
+- project source is read/written on the claim branch under source/write/return boundaries;
+- returns preserve both pins and final head;
+- reviewer evaluates the exact pinned Room contract, not a newer moving control ref.
 
-## E. Rework / Blocked / Stale
+## E. Acceptance / dependency transition
 
-- `REWORK`: reviewer returns bounded evidence/criteria; coordinator may reset the Room for another attempt.
-- `BLOCKED`: missing dependency, authority, source, decision, or tool; do not disguise as failure.
-- `STALE`: derived from abandoned claim policy; only coordinator/housekeeping may recover it through `CLAIM_PROTOCOL.md`.
+For an accepted Room:
+
+1. verify return evidence, diff scope, checks, acceptance criteria, and domain quality against pinned control contract;
+2. integrate/materialize accepted output on `integration_ref` / canonical source under project policy;
+3. record accepted claim head + integration commit;
+4. compile newly available dependency context into downstream Room `input/` packet(s);
+5. resolve downstream `claim_base_sha` to the intended integration/source commit;
+6. transition newly-unblocked Rooms to READY on `control_ref`;
+7. refresh Reception;
+8. push/verify the new remote control commit before exposing those Rooms.
+
+## F. Rework / Blocked / Stale
+
+- `REWORK`: reviewer returns bounded evidence/criteria; a new control snapshot/base may be issued.
+- `BLOCKED`: unresolved dependency/input/base/authority/source/decision/tool; do not disguise as failure or readiness.
+- `STALE`: derived abandoned-claim condition; only coordinator/housekeeping may archive/recover it through `CLAIM_PROTOCOL.md`.
 
 Retries preserve attempt evidence without expanding context for new Guests.
 
-## F. Close Hotel (Mode 4.3 — closure)
+## G. Close Hotel (Mode 4.3 — closure)
 
-Enter `CLOSING` by disabling new claims first.
+Enter `CLOSING` by disabling new claims on `control_ref` first and remotely verifying that transition.
 
 Closure gate requires:
 
-1. all required Rooms `ACCEPTED` or explicitly waived by an owner decision;
+1. all required Rooms `ACCEPTED` or explicitly waived by durable owner decision;
 2. accepted outputs integrated/materialized into canonical project source;
 3. no accepted result exists only on a temporary claim branch;
 4. required deterministic/project checks pass or documented owner exception exists;
 5. unresolved blockers/waivers are reflected in project truth;
 6. durable decisions are in `DECISION_LOG.md`;
-7. `CURRENT_STATE.md` states the phase result and next project action;
-8. `DESIGN_SPEC.md`/`ROADMAP.md` are amended only if durable scope/direction changed;
-9. a minimal Hotel completion record is prepared;
+7. `CURRENT_STATE.md` states phase result and next project action;
+8. `DESIGN_SPEC.md`/`ROADMAP.md` change only when durable scope/direction changed;
+9. minimal Hotel history is prepared with per-Room control/base/head/integration evidence;
 10. temporary refs/worktrees/packets are inventoried for retention/demolition.
 
-After the closure commit is remotely verified, lifecycle may become `CLOSED`.
+After the closure control/project commits are remotely verified, lifecycle may become `CLOSED`.
 
-## G. Demolish Hotel (Mode 4.3 — cleanup)
+## H. Demolish Hotel (Mode 4.3 — cleanup)
 
-Demolition is separate from closure and must be reversible/auditable until its final control commit.
+Demolition is separate from closure.
 
 ### Preserve permanently
 
 - accepted project output/source;
-- project state/decisions/roadmap/spec changes that remain relevant;
-- `hotels/history/<hotel-id>.json` minimal completion record;
-- explicitly retained audit refs/evidence required by policy.
+- relevant project state/decisions/roadmap/spec changes;
+- `hotels/history/<hotel-id>.json` with final control/integration and per-Room evidence;
+- explicitly retained attempt/audit refs required by policy.
 
 ### Eligible for removal after gate
 
-- Room packets already absorbed/reviewed;
-- claim branches and temporary attempt refs not retained by policy;
-- generated source copies;
-- transient return reports whose necessary evidence is summarized durably;
-- scratch validation output;
-- temporary worktrees;
-- active Reception/control files for the completed Hotel.
+- Room control packets already represented by history + accepted source;
+- claim branches and attempt refs not retained by policy;
+- generated source/context copies;
+- transient return reports whose required evidence is summarized durably;
+- scratch validation output and temporary worktrees;
+- active Reception/manifests for the completed Hotel.
 
 ### Demolition sequence
 
 1. verify Hotel is `CLOSED` and claims disabled;
-2. verify minimal history record against accepted integration/source;
+2. verify history record against accepted control/base/head/integration evidence;
 3. archive required refs/evidence;
 4. delete approved temporary remote refs/worktrees;
-5. remove `hotels/<hotel-id>/` execution scaffolding in a reviewed commit;
-6. keep `hotels/history/<hotel-id>.json`;
-7. update `CURRENT_STATE.md` so no completed/demolished Hotel is presented as active;
-8. push and verify the demolition control commit;
-9. mark history record lifecycle `DEMOLISHED`.
+5. remove `hotels/<hotel-id>/` execution scaffolding in reviewed project/control change;
+6. retain `hotels/history/<hotel-id>.json`;
+7. update `CURRENT_STATE.md` so completed/demolished Hotel is not presented as active;
+8. push/verify the final project/control state;
+9. record lifecycle `DEMOLISHED` in retained history.
 
-Never demolish simply because all Guests stopped talking. Closure acceptance and retention checks must exist first.
+Never demolish merely because Guests stopped talking. Closure acceptance and retention checks must exist first.
