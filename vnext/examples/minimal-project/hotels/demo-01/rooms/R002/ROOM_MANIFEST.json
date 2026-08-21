@@ -9,9 +9,9 @@
   "claim_base_sha": null,
   "inputs": [
     {
-      "path": "source/output-a.md",
+      "path": "hotels/demo-01/rooms/R002/input/r001-accepted.md",
       "required": true,
-      "purpose": "Accepted/materialized output from dependency R001; the path is expected on the future claim base after dependency integration."
+      "purpose": "Dependency context compiled onto the control plane after R001 acceptance; intentionally absent while this Room is BLOCKED."
     }
   ],
   "source_read_allowlist": [
@@ -26,7 +26,7 @@
     }
   ],
   "authority": {
-    "allowed": ["read accepted R001 output", "write allowlisted output", "commit/push claim branch"],
+    "allowed": ["read accepted R001 output", "read compiled dependency context", "write allowlisted output", "commit/push claim branch"],
     "forbidden": ["claim before dependency acceptance", "edit R001 output", "merge", "publish/deploy"]
   },
   "write_allowlist": [
@@ -37,7 +37,7 @@
   ],
   "checks": [],
   "acceptance_criteria": [
-    "source/output-b.md exists and is based on the accepted R001 output.",
+    "source/output-b.md exists and is based on the accepted R001 output plus the compiled dependency context.",
     "R001 accepted source remains unchanged."
   ],
   "return_contract": {
@@ -48,6 +48,7 @@
   "next_to": null,
   "escalation_conditions": [
     "R001 is not ACCEPTED/materialized.",
+    "Compiled dependency input is missing.",
     "claim_base_sha is unresolved.",
     "Atomic claim ownership cannot be verified."
   ]
