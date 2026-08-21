@@ -7,7 +7,7 @@
   "control_ref": "<CONTROL_REF>",
   "control_commit_sha": "<40_HEX_CONTROL_SHA>",
   "claim_base_sha": "<40_HEX_BASE_SHA>",
-  "head_sha": "<40_HEX_RETURNED_HEAD_SHA>",
+  "implementation_commit_sha": null,
   "status": "RETURNED",
   "changed_paths": [],
   "allowlist_self_check": {
@@ -20,5 +20,5 @@
   "output_paths": [],
   "unresolved": [],
   "requested_next_state": "REVIEW",
-  "notes": ""
+  "notes": "Reviewer derives return_head_sha from the verified remote claim ref after this file is committed."
 }
