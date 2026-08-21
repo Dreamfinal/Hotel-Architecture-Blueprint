@@ -3,7 +3,7 @@
 
 The validator uses only the Python standard library. JSON Schema validation is expected as
 an additional gate. Pass --check-git-refs during a real opening validation to verify the
-pinned Hotel/Room commits and integration ref in the Project repository.
+pinned Hotel/Room commits plus control/integration refs in the Project repository.
 """
 
 from __future__ import annotations
@@ -104,10 +104,9 @@ def has_cycle(room_ids: set[str], edges: set[tuple[str, str]]) -> bool:
     return any(dfs(room) for room in room_ids)
 
 
-def git_resolves(project_root: Path, value: str, is_sha: bool) -> bool:
-    target = f"{value}^{{commit}}" if is_sha else f"{value}^{{commit}}"
+def git_resolves(project_root: Path, value: str) -> bool:
     proc = subprocess.run(
-        ["git", "-C", str(project_root), "rev-parse", "--verify", "--quiet", target],
+        ["git", "-C", str(project_root), "rev-parse", "--verify", "--quiet", f"{value}^{{commit}}"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=False,
@@ -122,7 +121,7 @@ def main() -> int:
     parser.add_argument(
         "--check-git-refs",
         action="store_true",
-        help="Verify hotel_base_sha, non-null Room claim bases, and integration_ref resolve to commits",
+        help="Verify hotel_base_sha, non-null Room claim bases, control_ref, and integration_ref resolve",
     )
     args = parser.parse_args()
 
@@ -141,6 +140,7 @@ def main() -> int:
     claims_enabled = hotel.get("claims_enabled")
     hotel_base = hotel.get("hotel_base_sha")
     claim_prefix = hotel.get("claim_prefix")
+    control_ref = hotel.get("control_ref")
     integration_ref = hotel.get("integration_ref")
 
     if not hotel_id:
@@ -175,13 +175,24 @@ def main() -> int:
     else:
         reception_text = reception.read_text(encoding="utf-8")
 
+    forbidden_write_paths = hotel.get("forbidden_write_paths", [])
+    if not isinstance(forbidden_write_paths, list):
+        errors.append("forbidden_write_paths must be an array")
+        forbidden_write_paths = []
+    for rule in forbidden_write_paths:
+        try:
+            safe_path(project_root, rule)
+        except ValueError as exc:
+            errors.append(f"Hotel forbidden_write_paths: {exc}")
+
     if args.check_git_refs:
-        if not (project_root / ".git").exists() and not git_resolves(project_root, "HEAD", False):
+        if not git_resolves(project_root, "HEAD"):
             errors.append("--check-git-refs requires project_root to resolve as a Git worktree/repository")
-        if isinstance(hotel_base, str) and SHA40.match(hotel_base) and not git_resolves(project_root, hotel_base, True):
+        if isinstance(hotel_base, str) and SHA40.match(hotel_base) and not git_resolves(project_root, hotel_base):
             errors.append(f"hotel_base_sha does not resolve to a commit: {hotel_base}")
-        if not isinstance(integration_ref, str) or not integration_ref or not git_resolves(project_root, integration_ref, False):
-            errors.append(f"integration_ref does not resolve to a commit: {integration_ref!r}")
+        for ref_name, ref_value in (("control_ref", control_ref), ("integration_ref", integration_ref)):
+            if not isinstance(ref_value, str) or not ref_value or not git_resolves(project_root, ref_value):
+                errors.append(f"{ref_name} does not resolve to a commit: {ref_value!r}")
 
     room_refs = hotel.get("rooms")
     if not isinstance(room_refs, list) or not room_refs:
@@ -250,7 +261,7 @@ def main() -> int:
         if state in BASE_REQUIRED_STATES and (not isinstance(base_sha, str) or not SHA40.match(base_sha)):
             errors.append(f"Room {room_id} is {state} without a resolved claim_base_sha")
         if args.check_git_refs and isinstance(base_sha, str) and SHA40.match(base_sha):
-            if not git_resolves(project_root, base_sha, True):
+            if not git_resolves(project_root, base_sha):
                 errors.append(f"Room {room_id} claim_base_sha does not resolve: {base_sha}")
 
         if state in CLAIMABLE_STATES:
@@ -261,7 +272,8 @@ def main() -> int:
             else:
                 claimable.append(room_id)
 
-        for section in ("source_read_allowlist", "write_allowlist", "return_allowlist"):
+        path_sections = ("source_read_allowlist", "write_allowlist", "return_allowlist")
+        for section in path_sections:
             values = room.get(section, [])
             if not isinstance(values, list):
                 errors.append(f"Room {room_id} {section} must be an array")
@@ -271,6 +283,17 @@ def main() -> int:
                     safe_path(project_root, value)
                 except ValueError as exc:
                     errors.append(f"Room {room_id} {section}: {exc}")
+                    continue
+                if section in {"write_allowlist", "return_allowlist"}:
+                    for forbidden in forbidden_write_paths:
+                        try:
+                            if overlaps(value, forbidden):
+                                errors.append(
+                                    f"Room {room_id} {section} overlaps Hotel forbidden write path: "
+                                    f"{value} <> {forbidden}"
+                                )
+                        except ValueError:
+                            pass
 
         if state in CLAIMABLE_STATES:
             for source_rule in room.get("source_read_allowlist", []):
