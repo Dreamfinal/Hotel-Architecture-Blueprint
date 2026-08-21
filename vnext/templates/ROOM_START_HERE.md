@@ -2,6 +2,8 @@
 
 You own only this Room after a verified atomic claim.
 
+This file is part of the Room packet pinned by the claim's `control_commit_sha`; it is not required to exist in the claim code-base commit.
+
 ## Objective
 
 <One measurable outcome.>
@@ -10,31 +12,39 @@ You own only this Room after a verified atomic claim.
 
 - Hotel: `<HOTEL_ID>`
 - Room: `<ROOM_ID>`
-- Expected base: read `ROOM_MANIFEST.json -> claim_base_sha`
+- Control ref: read from Hotel manifest / Reception.
+- Control commit: pin the exact remote control-ref head before claim.
+- Claim base: read `ROOM_MANIFEST.json -> claim_base_sha` from that pinned control commit.
 - Claim ref: `hotel/<hotel-id>/claims/<room-id>`
 
-Do not begin implementation until the remote fixed claim ref and claim record verify this session as owner.
+Do not begin implementation until the remote fixed claim ref and claim record verify this session as owner with the same `control_commit_sha` and `claim_base_sha`.
 
 ## Read exactly this
 
-1. `ROOM_MANIFEST.json`
-2. every required path under manifest `inputs`
-3. Room-local skill payloads listed under `skills`
-4. existing project source paths listed under `source_read_allowlist`
+From the pinned `control_commit_sha`:
+
+1. this `START_HERE.md`;
+2. `ROOM_MANIFEST.json`;
+3. every required path under manifest `inputs`;
+4. Room-local skill payloads listed under `skills`.
+
+From the verified claim branch initialized at `claim_base_sha`:
+
+5. existing project source paths listed under `source_read_allowlist`.
 
 Do not scan the repository or load unrelated Rooms/plans/history.
 
 ## Authority
 
-Use only manifest `authority.allowed`. Anything in `authority.forbidden` remains forbidden even if your runtime/tool can perform it.
+Use only manifest `authority.allowed`. Anything in `authority.forbidden` or Hotel `forbidden_write_paths` remains forbidden even if your runtime/tool can perform it.
 
 ## Write boundary
 
-Write only `write_allowlist` plus `return_allowlist`. Inputs and source reads are read-only unless also listed for write.
+Write only production `write_allowlist` plus `return_allowlist` on the claim branch. Packet inputs/skills and source reads are read-only unless a production path is separately allowlisted for write.
 
 ## Validation
 
-Run the manifest checks that are both required and available in this runtime. Record exact commands/results. If a required capability is unavailable, follow the Room return contract; never claim an unrun check passed.
+Run manifest checks that are both required and available in this runtime. Record exact commands/results. If a required capability is unavailable, follow the Room return contract; never claim an unrun check passed.
 
 ## Acceptance
 
@@ -42,7 +52,7 @@ Satisfy every `acceptance_criteria` item. A successful push is return/delivery e
 
 ## Return
 
-Write the report at `return_contract.report_path` with all `required_fields`, commit/push the bounded result to the same claim branch, verify the remote head, report branch + head commit, then end the Guest session.
+Write the report at `return_contract.report_path` with all `required_fields`, including the pinned control/base identifiers when required; commit/push the bounded result to the same claim branch, verify the remote head, report branch + head commit, then end the Guest session.
 
 ## Escalate
 
