@@ -3,7 +3,7 @@
 
 The validator uses only the Python standard library. JSON Schema validation is expected as
 an additional gate. Pass --check-git-refs during a real opening validation to verify the
-pinned Hotel/Room commits plus control/integration refs in the Project repository.
+control snapshot, pinned Hotel/Room code commits, and integration ref.
 """
 
 from __future__ import annotations
@@ -104,9 +104,21 @@ def has_cycle(room_ids: set[str], edges: set[tuple[str, str]]) -> bool:
     return any(dfs(room) for room in room_ids)
 
 
-def git_resolves(project_root: Path, value: str) -> bool:
+def git_rev_parse(project_root: Path, value: str) -> str | None:
     proc = subprocess.run(
         ["git", "-C", str(project_root), "rev-parse", "--verify", "--quiet", f"{value}^{{commit}}"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def git_path_exists(project_root: Path, commit: str, rule: str) -> bool:
+    rule = normalize_rule(rule).rstrip("/")
+    proc = subprocess.run(
+        ["git", "-C", str(project_root), "cat-file", "-e", f"{commit}:{rule}"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=False,
@@ -116,12 +128,12 @@ def git_resolves(project_root: Path, value: str) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("hotel_dir", help="Path to hotels/<hotel-id>")
+    parser.add_argument("hotel_dir", help="Path to hotels/<hotel-id> on the control-ref checkout")
     parser.add_argument("--project-root", help="Project repository root; defaults to hotel_dir/../..")
     parser.add_argument(
         "--check-git-refs",
         action="store_true",
-        help="Verify hotel_base_sha, non-null Room claim bases, control_ref, and integration_ref resolve",
+        help="Verify control HEAD, hotel/Room bases, source paths, control_ref, and integration_ref in Git",
     )
     args = parser.parse_args()
 
@@ -186,13 +198,19 @@ def main() -> int:
             errors.append(f"Hotel forbidden_write_paths: {exc}")
 
     if args.check_git_refs:
-        if not git_resolves(project_root, "HEAD"):
-            errors.append("--check-git-refs requires project_root to resolve as a Git worktree/repository")
-        if isinstance(hotel_base, str) and SHA40.match(hotel_base) and not git_resolves(project_root, hotel_base):
+        head_sha = git_rev_parse(project_root, "HEAD")
+        control_sha = git_rev_parse(project_root, control_ref) if isinstance(control_ref, str) else None
+        integration_sha = git_rev_parse(project_root, integration_ref) if isinstance(integration_ref, str) else None
+        if head_sha is None:
+            errors.append("--check-git-refs requires project_root to be a Git worktree/repository")
+        if control_sha is None:
+            errors.append(f"control_ref does not resolve to a commit: {control_ref!r}")
+        elif head_sha is not None and head_sha != control_sha:
+            errors.append(f"validator checkout HEAD {head_sha} is not current control_ref head {control_sha}")
+        if integration_sha is None:
+            errors.append(f"integration_ref does not resolve to a commit: {integration_ref!r}")
+        if isinstance(hotel_base, str) and SHA40.match(hotel_base) and git_rev_parse(project_root, hotel_base) is None:
             errors.append(f"hotel_base_sha does not resolve to a commit: {hotel_base}")
-        for ref_name, ref_value in (("control_ref", control_ref), ("integration_ref", integration_ref)):
-            if not isinstance(ref_value, str) or not ref_value or not git_resolves(project_root, ref_value):
-                errors.append(f"{ref_name} does not resolve to a commit: {ref_value!r}")
 
     room_refs = hotel.get("rooms")
     if not isinstance(room_refs, list) or not room_refs:
@@ -209,8 +227,9 @@ def main() -> int:
         if room_id in rooms:
             errors.append(f"duplicate room_id: {room_id}")
             continue
-        if not manifest_rel:
-            errors.append(f"Room {room_id} missing manifest_path")
+        expected_manifest = f"hotels/{hotel_id}/rooms/{room_id}/ROOM_MANIFEST.json"
+        if manifest_rel != expected_manifest:
+            errors.append(f"Room {room_id} manifest_path must be {expected_manifest}, got {manifest_rel!r}")
             continue
         try:
             manifest_path = safe_path(project_root, manifest_rel)
@@ -220,6 +239,9 @@ def main() -> int:
         if not manifest_path.is_file():
             errors.append(f"Room {room_id} manifest missing: {manifest_rel}")
             continue
+        start_here = manifest_path.parent / "START_HERE.md"
+        if not start_here.is_file():
+            errors.append(f"Room {room_id} START_HERE.md is missing")
         try:
             room = load_json(manifest_path)
         except ValueError as exc:
@@ -261,7 +283,7 @@ def main() -> int:
         if state in BASE_REQUIRED_STATES and (not isinstance(base_sha, str) or not SHA40.match(base_sha)):
             errors.append(f"Room {room_id} is {state} without a resolved claim_base_sha")
         if args.check_git_refs and isinstance(base_sha, str) and SHA40.match(base_sha):
-            if not git_resolves(project_root, base_sha):
+            if git_rev_parse(project_root, base_sha) is None:
                 errors.append(f"Room {room_id} claim_base_sha does not resolve: {base_sha}")
 
         if state in CLAIMABLE_STATES:
@@ -298,35 +320,49 @@ def main() -> int:
         if state in CLAIMABLE_STATES:
             for source_rule in room.get("source_read_allowlist", []):
                 try:
-                    source_path = safe_path(project_root, source_rule)
+                    safe_path(project_root, source_rule)
                 except ValueError:
                     continue
-                if not source_path.exists():
-                    errors.append(f"Room {room_id} source_read_allowlist path missing at claimable state: {source_rule}")
+                if args.check_git_refs and isinstance(base_sha, str) and SHA40.match(base_sha):
+                    exists = git_path_exists(project_root, base_sha, source_rule)
+                else:
+                    exists = safe_path(project_root, source_rule).exists()
+                if not exists:
+                    errors.append(f"Room {room_id} source path missing at claimable state: {source_rule}")
 
+        input_prefix = f"hotels/{hotel_id}/rooms/{room_id}/input/"
         for item in room.get("inputs", []):
             if not isinstance(item, dict) or "path" not in item:
                 errors.append(f"Room {room_id} has invalid input entry")
                 continue
+            packet_path = item["path"]
+            if not isinstance(packet_path, str) or not packet_path.startswith(input_prefix):
+                errors.append(f"Room {room_id} input must live under {input_prefix}: {packet_path!r}")
+                continue
             try:
-                input_path = safe_path(project_root, item["path"])
+                input_path = safe_path(project_root, packet_path)
             except ValueError as exc:
                 errors.append(f"Room {room_id} input: {exc}")
                 continue
             if state in CLAIMABLE_STATES and item.get("required") and not input_path.exists():
-                errors.append(f"Room {room_id} required input missing at claimable state: {item['path']}")
+                errors.append(f"Room {room_id} required compiled input missing at claimable state: {packet_path}")
 
+        skill_prefix = f"hotels/{hotel_id}/rooms/{room_id}/skills/"
         for skill in room.get("skills", []):
             if not isinstance(skill, dict) or "path" not in skill:
                 errors.append(f"Room {room_id} has invalid skill entry")
                 continue
+            skill_rule = skill["path"]
+            if not isinstance(skill_rule, str) or not skill_rule.startswith(skill_prefix):
+                errors.append(f"Room {room_id} skill must live under {skill_prefix}: {skill_rule!r}")
+                continue
             try:
-                skill_path = safe_path(project_root, skill["path"])
+                skill_path = safe_path(project_root, skill_rule)
             except ValueError as exc:
                 errors.append(f"Room {room_id} skill: {exc}")
                 continue
             if skill.get("required") and not skill_path.exists():
-                errors.append(f"Room {room_id} required Room skill missing: {skill['path']}")
+                errors.append(f"Room {room_id} required Room skill missing: {skill_rule}")
 
         report_path = room.get("return_contract", {}).get("report_path")
         if report_path:
