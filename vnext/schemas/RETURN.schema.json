@@ -13,7 +13,6 @@
     "control_ref",
     "control_commit_sha",
     "claim_base_sha",
-    "head_sha",
     "status",
     "changed_paths",
     "allowlist_self_check",
@@ -32,7 +31,11 @@
     "control_ref": {"type": "string", "minLength": 1},
     "control_commit_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
     "claim_base_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
-    "head_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "implementation_commit_sha": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-fA-F]{40}$",
+      "description": "Optional known implementation commit created before writing the final return metadata. The final return/claim-head SHA is derived by the reviewer from the remote claim ref and is never self-declared by this file."
+    },
     "status": {
       "enum": ["RETURNED", "IMPLEMENTED_UNVERIFIED", "BLOCKED"]
     },
@@ -93,12 +96,24 @@
   },
   "allOf": [
     {
-      "if": {"properties": {"status": {"const": "RETURNED"}}},
+      "if": {"properties": {"status": {"const": "RETURNED"}}, "required": ["status"]},
       "then": {"properties": {"requested_next_state": {"const": "REVIEW"}}}
     },
     {
-      "if": {"properties": {"status": {"const": "BLOCKED"}}},
+      "if": {"properties": {"status": {"const": "BLOCKED"}}, "required": ["status"]},
       "then": {"properties": {"requested_next_state": {"const": "BLOCKED"}}}
+    },
+    {
+      "if": {
+        "properties": {
+          "allowlist_self_check": {
+            "properties": {"result": {"const": "FAIL"}},
+            "required": ["result"]
+          }
+        },
+        "required": ["allowlist_self_check"]
+      },
+      "then": {"properties": {"requested_next_state": {"const": "REWORK"}}}
     }
   ]
 }
