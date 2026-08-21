@@ -13,7 +13,7 @@ schema_version: return-vnext-0.1
 
 Use `schemas/RETURN.schema.json` and `templates/ROOM_RETURN.json`. A project may additionally retain human-readable notes/evidence under the Room return allowlist, but those do not replace the JSON return record.
 
-The return identifies both the immutable Room-contract snapshot and code base used for implementation:
+The return identifies the immutable Room-contract snapshot and code base used for implementation:
 
 ```text
 hotel_id
@@ -23,7 +23,7 @@ session_id
 control_ref
 control_commit_sha
 claim_base_sha
-head_sha
+implementation_commit_sha?   # optional, only if known before final return metadata commit
 status
 changed_paths
 allowlist_self_check
@@ -34,6 +34,8 @@ output_paths
 unresolved
 requested_next_state
 ```
+
+`ROOM_RETURN.json` deliberately does **not** declare the SHA of the commit that contains itself. The final remote claim-branch head is reviewer-derived evidence named `return_head_sha`.
 
 `control_commit_sha` pins the exact Reception/Room packet/skills/criteria the Guest followed. `claim_base_sha` pins the project code/integration tree from which the working claim branch began.
 
@@ -49,19 +51,21 @@ A Guest must never self-assign `ACCEPTED`.
 
 The designated reviewer/coordinator:
 
-1. validates `ROOM_RETURN.json` against `RETURN.schema.json`;
-2. verifies claim branch identity, `control_commit_sha`, `claim_base_sha`, and returned head;
-3. reloads the Room contract from the pinned control commit rather than a newer moving control ref;
-4. verifies every `changed_paths` entry against that contract's production + return allowlists and Hotel-wide forbidden paths;
-5. independently checks the actual diff so an incomplete self-reported path list cannot hide scope expansion;
-6. verifies declared deterministic evidence or reruns checks in an authorized runtime;
-7. reviews every acceptance criterion from the pinned control packet;
-8. checks domain/UX/quality criteria that cannot be reduced to exit codes;
-9. records verdict `ACCEPTED`, `REWORK`, or `BLOCKED` with evidence;
-10. integrates/materializes accepted output through the Hotel integration path;
-11. records accepted claim head + integration/source commit;
-12. compiles any dependency output needed by downstream Rooms, resolves newly-ready Room `claim_base_sha` values, and refreshes Room manifests/Reception on `control_ref`;
-13. verifies the remote control commit before exposing newly-ready Rooms to Guests.
+1. resolves the exact remote fixed claim ref and records its current head as `return_head_sha`;
+2. reads `ROOM_RETURN.json` from that exact returned head and validates it against `RETURN.schema.json`;
+3. verifies claim branch identity, `control_commit_sha`, `claim_base_sha`, and claim/session IDs;
+4. reloads the Room contract from the pinned control commit rather than a newer moving control ref;
+5. computes the actual diff from `claim_base_sha` to `return_head_sha`;
+6. verifies every actual changed path against that contract's production + return allowlists and Hotel-wide forbidden paths;
+7. checks that self-reported `changed_paths` matches the actual diff (order need not matter), so omitted files cannot hide scope expansion;
+8. verifies declared deterministic evidence or reruns checks in an authorized runtime;
+9. reviews every acceptance criterion from the pinned control packet;
+10. checks domain/UX/quality criteria that cannot be reduced to exit codes;
+11. records verdict `ACCEPTED`, `REWORK`, or `BLOCKED` with evidence;
+12. integrates/materializes accepted output through the Hotel integration path;
+13. records accepted `return_head_sha` + integration/source commit;
+14. compiles dependency output needed by downstream Rooms, resolves newly-ready Room `claim_base_sha` values, and refreshes Room manifests/Reception on `control_ref`;
+15. verifies the remote control commit before exposing newly-ready Rooms to Guests.
 
 ## Acceptance invariant
 
@@ -97,6 +101,6 @@ The integration method must not bypass project review/owner gates.
 
 ## Phase closeout
 
-Before Hotel closure, reviewer/coordinator reconciles all accepted/waived Rooms against canonical source and produces the minimal Hotel history record. That record preserves enough per-Room control/base/head/integration evidence to audit what contract each Room completed without retaining all temporary packets forever.
+Before Hotel closure, reviewer/coordinator reconciles all accepted/waived Rooms against canonical source and produces the minimal Hotel history record. That record preserves enough per-Room control/base/accepted-return-head/integration evidence to audit what contract each Room completed without retaining all temporary packets forever.
 
 Only then may temporary Room returns/claim refs become eligible for demolition under retention policy.
