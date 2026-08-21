@@ -11,7 +11,7 @@
     {
       "path": "source/input.md",
       "required": true,
-      "purpose": "Compiled source input for this Room."
+      "purpose": "Compiled source input from the pinned control commit."
     }
   ],
   "source_read_allowlist": [
@@ -21,7 +21,7 @@
     {
       "path": "hotels/demo-01/rooms/R001/skills/example/SKILL.md",
       "required": true,
-      "purpose": "Room-local execution method; no Team Repo required."
+      "purpose": "Room-local execution method from the pinned control commit; no Team Repo required."
     }
   ],
   "tools": [
@@ -32,7 +32,7 @@
     }
   ],
   "authority": {
-    "allowed": ["read declared input", "write allowlisted output", "commit/push claim branch"],
+    "allowed": ["read declared packet/source input", "write allowlisted output", "commit/push claim branch"],
     "forbidden": ["edit unrelated source", "merge", "delete foreign refs", "publish/deploy"]
   },
   "write_allowlist": [
@@ -51,17 +51,17 @@
     }
   ],
   "acceptance_criteria": [
-    "source/output-a.md exists and is derived only from the declared input.",
+    "source/output-a.md exists and is derived only from declared packet/source inputs.",
     "No path outside production/return allowlists changed."
   ],
   "return_contract": {
     "report_path": "hotels/demo-01/rooms/R001/return/ROOM_REPORT.md",
-    "required_fields": ["hotel_id", "room_id", "claim_id", "claim_base_sha", "head_sha", "changed_paths", "checks_run", "checks_unrun", "unresolved"]
+    "required_fields": ["hotel_id", "room_id", "claim_id", "control_ref", "control_commit_sha", "claim_base_sha", "head_sha", "changed_paths", "checks_run", "checks_unrun", "unresolved"]
   },
   "reviewer": "Project Coordinator",
   "next_to": "R002",
   "escalation_conditions": [
-    "Declared input is missing or contradictory.",
+    "Declared packet/source input is missing or contradictory.",
     "Required output would need a path outside write_allowlist.",
     "Atomic claim ownership cannot be verified."
   ]
