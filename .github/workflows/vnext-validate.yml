@@ -28,6 +28,7 @@ jobs:
         run: |
           python -m json.tool vnext/schemas/HOTEL_MANIFEST.schema.json > /dev/null
           python -m json.tool vnext/schemas/ROOM_MANIFEST.schema.json > /dev/null
+          python -m json.tool vnext/schemas/CLAIM.schema.json > /dev/null
           python -m json.tool vnext/schemas/HOTEL_HISTORY.schema.json > /dev/null
           python -m json.tool vnext/examples/minimal-project/hotels/demo-01/HOTEL_MANIFEST.json > /dev/null
           python -m json.tool vnext/examples/minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json > /dev/null
@@ -46,6 +47,7 @@ jobs:
           root = Path('vnext')
           hotel_schema = json.loads((root/'schemas/HOTEL_MANIFEST.schema.json').read_text())
           room_schema = json.loads((root/'schemas/ROOM_MANIFEST.schema.json').read_text())
+          claim_schema = json.loads((root/'schemas/CLAIM.schema.json').read_text())
           history_schema = json.loads((root/'schemas/HOTEL_HISTORY.schema.json').read_text())
           hotel = json.loads((root/'examples/minimal-project/hotels/demo-01/HOTEL_MANIFEST.json').read_text())
           r1 = json.loads((root/'examples/minimal-project/hotels/demo-01/rooms/R001/ROOM_MANIFEST.json').read_text())
@@ -53,6 +55,7 @@ jobs:
 
           Draft202012Validator.check_schema(hotel_schema)
           Draft202012Validator.check_schema(room_schema)
+          Draft202012Validator.check_schema(claim_schema)
           Draft202012Validator.check_schema(history_schema)
           Draft202012Validator(hotel_schema).validate(hotel)
           Draft202012Validator(room_schema).validate(r1)
