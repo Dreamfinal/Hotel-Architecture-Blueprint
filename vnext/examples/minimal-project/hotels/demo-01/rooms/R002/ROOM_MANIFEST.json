@@ -7,42 +7,25 @@
   "logical_state": "BLOCKED",
   "depends_on": ["R001"],
   "claim_base_sha": null,
-  "inputs": [
-    {
-      "path": "hotels/demo-01/rooms/R002/input/r001-accepted.md",
-      "required": true,
-      "purpose": "Dependency context compiled onto the control plane after R001 acceptance; intentionally absent while this Room is BLOCKED."
-    }
-  ],
-  "source_read_allowlist": [
-    "source/output-a.md"
-  ],
+  "inputs": [{"path": "hotels/demo-01/rooms/R002/input/r001-accepted.md", "required": true, "purpose": "Dependency context compiled onto the control plane after R001 acceptance; intentionally absent while this Room is BLOCKED."}],
+  "source_read_allowlist": ["source/output-a.md"],
   "skills": [],
-  "tools": [
-    {
-      "capability": "text-file-edit",
-      "required": true,
-      "notes": "Runtime-neutral file editing capability."
-    }
-  ],
+  "tools": [{"capability": "text-file-edit", "required": true, "notes": "Runtime-neutral file editing capability."}],
   "authority": {
     "allowed": ["read accepted R001 output", "read compiled dependency context", "write allowlisted output", "commit/push claim branch"],
     "forbidden": ["claim before dependency acceptance", "edit R001 output", "merge", "publish/deploy"]
   },
-  "write_allowlist": [
-    "source/output-b.md"
-  ],
-  "return_allowlist": [
-    "hotels/demo-01/rooms/R002/return/"
-  ],
+  "write_allowlist": ["source/output-b.md"],
+  "return_allowlist": ["hotels/demo-01/rooms/R002/return/"],
   "checks": [],
   "acceptance_criteria": [
     "source/output-b.md exists and is based on the accepted R001 output plus the compiled dependency context.",
     "R001 accepted source remains unchanged."
   ],
   "return_contract": {
-    "report_path": "hotels/demo-01/rooms/R002/return/ROOM_REPORT.md",
-    "required_fields": ["hotel_id", "room_id", "claim_id", "control_ref", "control_commit_sha", "claim_base_sha", "head_sha", "changed_paths", "checks_run", "checks_unrun", "unresolved"]
+    "schema_version": "return-vnext-0.1",
+    "report_path": "hotels/demo-01/rooms/R002/return/ROOM_RETURN.json",
+    "required_fields": ["hotel_id", "room_id", "claim_id", "session_id", "control_ref", "control_commit_sha", "claim_base_sha", "head_sha", "status", "changed_paths", "allowlist_self_check", "checks_run", "checks_unrun", "output_paths", "unresolved", "requested_next_state"]
   },
   "reviewer": "Project Coordinator",
   "next_to": null,
