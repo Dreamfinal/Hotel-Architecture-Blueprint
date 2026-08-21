@@ -66,9 +66,13 @@ def main() -> int:
         project = copied_project(temp / "case-pass")
         expect_ok("minimal dependency Hotel", project)
 
-        project = copied_project(temp / "case-missing-input")
+        project = copied_project(temp / "case-missing-source")
         (project / "source" / "input.md").unlink()
-        expect_fail("claimable missing input", project, "required input missing at claimable state")
+        expect_fail("claimable missing source", project, "source path missing at claimable state")
+
+        project = copied_project(temp / "case-missing-packet-input")
+        (project / "hotels" / "demo-01" / "rooms" / "R001" / "input" / "brief.md").unlink()
+        expect_fail("claimable missing compiled input", project, "required compiled input missing at claimable state")
 
         project = copied_project(temp / "case-traversal")
         r1_path = project / "hotels" / "demo-01" / "rooms" / "R001" / "ROOM_MANIFEST.json"
@@ -105,7 +109,7 @@ def main() -> int:
         r2["logical_state"] = "READY"
         r2["depends_on"] = []
         r2["claim_base_sha"] = "b" * 40
-        r2["inputs"] = [{"path": "source/input.md", "required": True, "purpose": "test input"}]
+        r2["inputs"] = []
         r2["source_read_allowlist"] = ["source/input.md"]
         r2["write_allowlist"] = ["source/output-a.md"]
         save(r2_path, r2)
