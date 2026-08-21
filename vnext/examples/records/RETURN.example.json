@@ -1,0 +1,39 @@
+{
+  "schema_version": "return-vnext-0.1",
+  "hotel_id": "demo-01",
+  "room_id": "R001",
+  "claim_id": "demo-claim-r001-001",
+  "session_id": "demo-session-001",
+  "control_ref": "refs/heads/hotel/demo-01/control",
+  "control_commit_sha": "cccccccccccccccccccccccccccccccccccccccc",
+  "claim_base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "head_sha": "1111111111111111111111111111111111111111",
+  "status": "RETURNED",
+  "changed_paths": [
+    "source/output-a.md",
+    "hotels/demo-01/rooms/R001/return/ROOM_RETURN.json"
+  ],
+  "allowlist_self_check": {
+    "result": "PASS",
+    "outside_allowlist_paths": []
+  },
+  "implemented_contract": [
+    "Created the bounded demo output from declared packet/source inputs."
+  ],
+  "checks_run": [
+    {
+      "id": "output-exists",
+      "command": "python -c \"from pathlib import Path; assert Path('source/output-a.md').is_file()\"",
+      "result": "PASS",
+      "exit_code": 0,
+      "evidence": "source/output-a.md exists on returned claim branch"
+    }
+  ],
+  "checks_unrun": [],
+  "output_paths": [
+    "source/output-a.md"
+  ],
+  "unresolved": [],
+  "requested_next_state": "REVIEW",
+  "notes": "Example only; SHAs are placeholders and do not represent a real claim."
+}
