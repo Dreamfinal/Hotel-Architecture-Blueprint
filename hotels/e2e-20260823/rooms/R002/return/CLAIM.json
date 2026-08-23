@@ -1,0 +1,13 @@
+{
+  "schema_version": "claim-vnext-0.1",
+  "hotel_id": "e2e-20260823",
+  "room_id": "R002",
+  "claim_id": "codex-r002-rework-20260823",
+  "session_id": "codex-session-20260823-r002-rework",
+  "control_ref": "refs/heads/hotel/e2e-20260823/control",
+  "control_commit_sha": "04d561eab1df676907592958e96e9f7bafcdb96f",
+  "claim_base_sha": "ab103246b90c5a37bdb1187dcc9c2399e63fec36",
+  "claimed_at_utc": "2026-08-23T15:45:36.9825616Z",
+  "status": "CLAIMED",
+  "head_sha": null
+}
