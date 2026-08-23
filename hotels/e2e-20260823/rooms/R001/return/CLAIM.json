@@ -1,0 +1,13 @@
+{
+    "schema_version":  "claim-vnext-0.1",
+    "hotel_id":  "e2e-20260823",
+    "room_id":  "R001",
+    "claim_id":  "chatgpt-r001-20260823",
+    "session_id":  "chatgpt-session-20260823-r001",
+    "claimed_at_utc":  "2026-08-23T15:35:21Z",
+    "control_ref":  "refs/heads/hotel/e2e-20260823/control",
+    "control_commit_sha":  "ed9e7cf78757e383330d68affc94ad5711eca297",
+    "claim_base_sha":  "ab103246b90c5a37bdb1187dcc9c2399e63fec36",
+    "status":  "CLAIMED",
+    "head_sha":  null
+}
