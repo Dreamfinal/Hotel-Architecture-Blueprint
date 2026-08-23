@@ -1,0 +1,43 @@
+{
+    "schema_version":  "return-vnext-0.1",
+    "hotel_id":  "e2e-20260823",
+    "room_id":  "R001",
+    "claim_id":  "chatgpt-r001-20260823",
+    "session_id":  "chatgpt-session-20260823-r001",
+    "control_ref":  "refs/heads/hotel/e2e-20260823/control",
+    "control_commit_sha":  "ed9e7cf78757e383330d68affc94ad5711eca297",
+    "claim_base_sha":  "ab103246b90c5a37bdb1187dcc9c2399e63fec36",
+    "implementation_commit_sha":  "81a997c1082d2a73d988a6d46fe16b9d26a1c08b",
+    "status":  "RETURNED",
+    "changed_paths":  [
+                          "hotels/e2e-20260823/rooms/R001/return/CLAIM.json",
+                          "hotels/e2e-20260823/rooms/R001/return/ROOM_RETURN.json",
+                          "source/chatgpt-output.md"
+                      ],
+    "allowlist_self_check":  {
+                                 "result":  "PASS",
+                                 "outside_allowlist_paths":  [
+
+                                                             ]
+                             },
+    "implemented_contract":  [
+                                 "Created the R001 runtime-specific output from the declared control packet and source input using GitHub REST only."
+                             ],
+    "checks_run":  [
+
+                   ],
+    "checks_unrun":  [
+                         {
+                             "id":  "chatgpt-output-exists",
+                             "reason":  "Cloud/GitHub-only ChatGPT adapter did not invoke local Python; output existence was verified by fetching the exact claim branch through GitHub contents API."
+                         }
+                     ],
+    "output_paths":  [
+                         "source/chatgpt-output.md"
+                     ],
+    "unresolved":  [
+
+                   ],
+    "requested_next_state":  "REVIEW",
+    "notes":  "ChatGPT Guest used GitHub REST for exact control reads, atomic fixed claim, bounded writes, and return. Reviewer derives return_head_sha from remote claim ref."
+}
