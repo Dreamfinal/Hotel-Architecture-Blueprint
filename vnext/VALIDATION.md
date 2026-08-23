@@ -121,3 +121,15 @@ Before removing execution scaffolding:
 - deletion set contains only approved temporary Hotel material.
 
 Validation is deterministic evidence. It does not replace domain review of Room outputs.
+
+## 9. Runtime portability acceptance evidence (2026-08-23)
+
+A remote GitHub-backed acceptance Hotel (`e2e-20260823`) exercised the same vNext contract across two Guest runtimes without using Rin:
+
+- ChatGPT Guest claimed READY Room `R001` from base `ab103246b90c5a37bdb1187dcc9c2399e63fec36` using GitHub ref/file APIs, returned only its fixed claim/return paths plus `source/chatgpt-output.md`, and reviewer validation passed at remote head `06b5b2493a826345f536d12ef6e5b4b1c510c185`.
+- Codex Guest claimed independent READY Room `R003` from the same base using the local Git adapter, ran its required output check, returned only its fixed claim/return paths plus `source/codex-ready-output.md`, and reviewer validation passed at remote head `f27cf3163bcfe58a6f8ee18f8cdfe7db702c7ac9`.
+- Both used the same `refs/heads/hotel/e2e-20260823/control` namespace, the same claim namespace, the same schemas, and reviewer-derived remote return heads.
+- A deliberately malformed first Codex return on `R002` was rejected by the reviewer validator, archived as `refs/archive/hotel/e2e-20260823/R002/attempt-1`, then recovered through the documented REWORK flow; this demonstrated fail-closed review/recovery rather than being counted as the portability pass.
+- No Hotel manifest, Project state protocol, or lifecycle contract required Rin mailbox/log state or permanent Guest memory.
+
+This evidence satisfies the runtime-portability acceptance criteria in `RUNTIME_ADAPTERS.md`; owner acceptance and PR merge remain separate gates.
