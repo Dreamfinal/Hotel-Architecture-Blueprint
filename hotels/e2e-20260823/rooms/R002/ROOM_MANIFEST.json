@@ -1,0 +1,90 @@
+{
+  "schema_version": "room-vnext-0.1",
+  "hotel_id": "e2e-20260823",
+  "room_id": "R002",
+  "title": "Codex Guest portability Room",
+  "objective": "Create source/codex-output.md using only declared input.",
+  "logical_state": "READY",
+  "depends_on": [],
+  "claim_base_sha": "ab103246b90c5a37bdb1187dcc9c2399e63fec36",
+  "inputs": [
+    {
+      "path": "hotels/e2e-20260823/rooms/R002/input/brief.md",
+      "required": true,
+      "purpose": "Compiled E2E Room brief from the pinned control commit."
+    }
+  ],
+  "source_read_allowlist": [
+    "source/e2e-input.md"
+  ],
+  "skills": [],
+  "tools": [
+    {
+      "capability": "text-file-edit",
+      "required": true,
+      "notes": "Runtime-neutral file editing capability."
+    }
+  ],
+  "authority": {
+    "allowed": [
+      "read accepted R001 output",
+      "read compiled dependency context",
+      "write allowlisted output",
+      "commit/push claim branch"
+    ],
+    "forbidden": [
+      "claim before dependency acceptance",
+      "edit R001 output",
+      "merge",
+      "publish/deploy"
+    ]
+  },
+  "write_allowlist": [
+    "source/codex-output.md"
+  ],
+  "return_allowlist": [
+    "hotels/e2e-20260823/rooms/R002/return/"
+  ],
+  "checks": [
+    {
+      "id": "codex-output-exists",
+      "command": "python -c \"from pathlib import Path; assert Path('source/codex-output.md').is_file()\"",
+      "required": true,
+      "expected_exit_code": 0,
+      "requires_capability": "python"
+    }
+  ],
+  "acceptance_criteria": [
+    "source/codex-output.md exists and identifies Codex Guest.",
+    "No path outside production/return allowlists changed."
+  ],
+  "return_contract": {
+    "schema_version": "return-vnext-0.1",
+    "report_path": "hotels/e2e-20260823/rooms/R002/return/ROOM_RETURN.json",
+    "required_fields": [
+      "hotel_id",
+      "room_id",
+      "claim_id",
+      "session_id",
+      "control_ref",
+      "control_commit_sha",
+      "claim_base_sha",
+      "status",
+      "changed_paths",
+      "allowlist_self_check",
+      "checks_run",
+      "checks_unrun",
+      "output_paths",
+      "unresolved",
+      "requested_next_state"
+    ]
+  },
+  "reviewer": "Project Coordinator",
+  "next_to": null,
+  "escalation_conditions": [
+    "R001 is not ACCEPTED/materialized.",
+    "Compiled dependency input is missing.",
+    "claim_base_sha is unresolved.",
+    "Atomic claim ownership cannot be verified."
+  ]
+}

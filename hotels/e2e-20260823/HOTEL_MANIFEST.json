@@ -1,0 +1,40 @@
+{
+  "schema_version": "hotel-vnext-0.1",
+  "protocol_version": "vnext-0.1",
+  "hotel_id": "e2e-20260823",
+  "phase_id": "runtime-portability",
+  "objective": "Verify ChatGPT and Codex Guests against one runtime-neutral Hotel contract.",
+  "lifecycle": "OPEN",
+  "claims_enabled": true,
+  "hotel_base_sha": "ab103246b90c5a37bdb1187dcc9c2399e63fec36",
+  "control_ref": "refs/heads/hotel/e2e-20260823/control",
+  "integration_ref": "refs/heads/hotel/e2e-20260823/integration",
+  "claim_prefix": "hotel/e2e-20260823/claims/",
+  "claim_stale_after_hours": 24,
+  "reception_path": "RECEPTION.md",
+  "current_state_path": "CURRENT_STATE.md",
+  "forbidden_write_paths": [
+    ".github/",
+    "CURRENT_STATE.md",
+    "DECISION_LOG.md"
+  ],
+  "rooms": [
+    {
+      "room_id": "R001",
+      "manifest_path": "hotels/e2e-20260823/rooms/R001/ROOM_MANIFEST.json"
+    },
+    {
+      "room_id": "R002",
+      "manifest_path": "hotels/e2e-20260823/rooms/R002/ROOM_MANIFEST.json"
+    }
+  ],
+  "dependency_edges": [],
+  "retention": {
+    "history_record": "KEEP",
+    "claim_refs": "ARCHIVE_REQUIRED_ONLY",
+    "room_packets": "DELETE_AFTER_DEMOLITION",
+    "working_branches": "ARCHIVE_REQUIRED_ONLY"
+  },
+  "opened_at_utc": "2026-08-23T15:30:00Z",
+  "closed_at_utc": null
+}
