@@ -1,0 +1,40 @@
+{
+  "schema_version": "return-vnext-0.1",
+  "hotel_id": "e2e-20260823",
+  "room_id": "R002",
+  "claim_id": "codex-r002-rework-20260823",
+  "session_id": "codex-session-20260823-r002-rework",
+  "control_ref": "refs/heads/hotel/e2e-20260823/control",
+  "control_commit_sha": "04d561eab1df676907592958e96e9f7bafcdb96f",
+  "claim_base_sha": "ab103246b90c5a37bdb1187dcc9c2399e63fec36",
+  "implementation_commit_sha": "6cb165b91e9fc7aa46ba52919173c75b995399f0",
+  "status": "RETURNED",
+  "changed_paths": [
+    "hotels/e2e-20260823/rooms/R002/return/CLAIM.json",
+    "hotels/e2e-20260823/rooms/R002/return/ROOM_RETURN.json",
+    "source/codex-output.md"
+  ],
+  "allowlist_self_check": {
+    "result": "PASS",
+    "outside_allowlist_paths": []
+  },
+  "implemented_contract": [
+    "Created the bounded Codex Guest output from declared input."
+  ],
+  "checks_run": [
+    {
+      "id": "codex-output-exists",
+      "command": "python -c \"from pathlib import Path; assert Path('source/codex-output.md').is_file()\"",
+      "result": "PASS",
+      "exit_code": 0,
+      "evidence": "required check passed in Codex Guest worktree"
+    }
+  ],
+  "checks_unrun": [],
+  "output_paths": [
+    "source/codex-output.md"
+  ],
+  "unresolved": [],
+  "requested_next_state": "REVIEW",
+  "notes": "Reviewer derives return_head_sha from the remote claim ref."
+}
