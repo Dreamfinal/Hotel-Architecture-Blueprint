@@ -26,6 +26,10 @@
     {
       "room_id": "R002",
       "manifest_path": "hotels/e2e-20260823/rooms/R002/ROOM_MANIFEST.json"
+    },
+    {
+      "room_id": "R003",
+      "manifest_path": "hotels/e2e-20260823/rooms/R003/ROOM_MANIFEST.json"
     }
   ],
   "dependency_edges": [],

@@ -1,0 +1,88 @@
+{
+  "schema_version": "room-vnext-0.1",
+  "hotel_id": "e2e-20260823",
+  "room_id": "R003",
+  "title": "Codex READY portability Room",
+  "objective": "Create source/codex-ready-output.md using only declared input.",
+  "logical_state": "READY",
+  "depends_on": [],
+  "claim_base_sha": "ab103246b90c5a37bdb1187dcc9c2399e63fec36",
+  "inputs": [
+    {
+      "path": "hotels/e2e-20260823/rooms/R003/input/brief.md",
+      "required": true,
+      "purpose": "Compiled E2E Room brief from pinned control."
+    }
+  ],
+  "source_read_allowlist": [
+    "source/e2e-input.md"
+  ],
+  "skills": [],
+  "tools": [
+    {
+      "capability": "text-file-edit",
+      "required": true,
+      "notes": "Runtime-neutral file editing capability."
+    }
+  ],
+  "authority": {
+    "allowed": [
+      "read declared packet/source input",
+      "write allowlisted output",
+      "commit/push claim branch"
+    ],
+    "forbidden": [
+      "edit unrelated source",
+      "merge",
+      "delete foreign refs",
+      "publish/deploy"
+    ]
+  },
+  "write_allowlist": [
+    "source/codex-ready-output.md"
+  ],
+  "return_allowlist": [
+    "hotels/e2e-20260823/rooms/R003/return/"
+  ],
+  "checks": [
+    {
+      "id": "codex-ready-output-exists",
+      "command": "python -c \"from pathlib import Path; assert Path('source/codex-ready-output.md').is_file()\"",
+      "required": true,
+      "expected_exit_code": 0,
+      "requires_capability": "python"
+    }
+  ],
+  "acceptance_criteria": [
+    "source/codex-ready-output.md exists and identifies Codex Guest.",
+    "No path outside production/return allowlists changed."
+  ],
+  "return_contract": {
+    "schema_version": "return-vnext-0.1",
+    "report_path": "hotels/e2e-20260823/rooms/R003/return/ROOM_RETURN.json",
+    "required_fields": [
+      "hotel_id",
+      "room_id",
+      "claim_id",
+      "session_id",
+      "control_ref",
+      "control_commit_sha",
+      "claim_base_sha",
+      "status",
+      "changed_paths",
+      "allowlist_self_check",
+      "checks_run",
+      "checks_unrun",
+      "output_paths",
+      "unresolved",
+      "requested_next_state"
+    ]
+  },
+  "reviewer": "Project Coordinator",
+  "next_to": null,
+  "escalation_conditions": [
+    "Declared packet/source input is missing or contradictory.",
+    "Required output would need a path outside write_allowlist.",
+    "Atomic claim ownership cannot be verified."
+  ]
+}
