@@ -1,0 +1,36 @@
+{
+  "schema_version": "return-vnext-0.1",
+  "hotel_id": "e2e-20260823",
+  "room_id": "R002",
+  "claim_id": "codex-r002-20260823-v2",
+  "session_id": "codex-session-20260823-r002-v2",
+  "control_ref": "refs/heads/hotel/e2e-20260823/control",
+  "control_commit_sha": "ed9e7cf78757e383330d68affc94ad5711eca297",
+  "claim_base_sha": "ab103246b90c5a37bdb1187dcc9c2399e63fec36",
+  "status": "RETURNED",
+  "changed_paths": [
+    "CLAIM.json",
+    "ROOM_RETURN.json",
+    "source/codex-output.md"
+  ],
+  "allowlist_self_check": {
+    "status": "PASS",
+    "detail": "no outside paths"
+  },
+  "implemented_contract": "Bounded output identifying the Codex Guest/local Git adapter and pinned control SHA.",
+  "checks_run": [
+    {
+      "id": "codex-output-exists",
+      "status": "PASS",
+      "exit_code": 0,
+      "evidence": "python -c \"from pathlib import Path; assert Path('source/codex-output.md').is_file()\""
+    }
+  ],
+  "checks_unrun": [],
+  "output_paths": [
+    "source/codex-output.md"
+  ],
+  "unresolved": [],
+  "requested_next_state": "REVIEW",
+  "implementation_commit_sha": "cb8d35fe282acc21907c7669c1391eac32694bd9"
+}
