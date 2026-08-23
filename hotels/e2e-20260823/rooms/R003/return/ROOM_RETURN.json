@@ -1,0 +1,41 @@
+{
+  "schema_version": "return-vnext-0.1",
+  "hotel_id": "e2e-20260823",
+  "room_id": "R003",
+  "claim_id": "codex-r003-ready-20260823",
+  "session_id": "codex-session-20260823-r003-ready",
+  "control_ref": "refs/heads/hotel/e2e-20260823/control",
+  "control_commit_sha": "7e26dc68c1c35289398d6960674c6e902f046f1a",
+  "claim_base_sha": "ab103246b90c5a37bdb1187dcc9c2399e63fec36",
+  "status": "RETURNED",
+  "changed_paths": [
+    "hotels/e2e-20260823/rooms/R003/return/CLAIM.json",
+    "hotels/e2e-20260823/rooms/R003/return/ROOM_RETURN.json",
+    "source/codex-ready-output.md"
+  ],
+  "allowlist_self_check": {
+    "result": "PASS",
+    "outside_allowlist_paths": []
+  },
+  "implemented_contract": [
+    "Created source/codex-ready-output.md as the runtime-specific production output.",
+    "Identified the Codex Guest and local Git adapter.",
+    "Recorded the pinned control commit SHA."
+  ],
+  "implementation_commit_sha": "1d0de1fbe3a3ef43b3f1d5cdb0d29d3051a61678",
+  "checks_run": [
+    {
+      "id": "codex-ready-output-exists",
+      "command": "python -c \"from pathlib import Path; assert Path('source/codex-ready-output.md').is_file()\"",
+      "result": "PASS",
+      "exit_code": 0,
+      "evidence": "source/codex-ready-output.md exists"
+    }
+  ],
+  "checks_unrun": [],
+  "output_paths": [
+    "source/codex-ready-output.md"
+  ],
+  "unresolved": [],
+  "requested_next_state": "REVIEW"
+}
