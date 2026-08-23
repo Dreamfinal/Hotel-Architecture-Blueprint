@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dreamfinal.github.io/hotel-protocol/vnext/HOTEL_MANIFEST.schema.json",
+  "title": "Hotel Protocol vNext - Hotel Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "protocol_version",
+    "hotel_id",
+    "phase_id",
+    "objective",
+    "lifecycle",
+    "claims_enabled",
+    "hotel_base_sha",
+    "control_ref",
+    "integration_ref",
+    "claim_prefix",
+    "reception_path",
+    "current_state_path",
+    "forbidden_write_paths",
+    "rooms",
+    "dependency_edges",
+    "retention"
+  ],
+  "properties": {
+    "schema_version": {"const": "hotel-vnext-0.1"},
+    "protocol_version": {"type": "string", "minLength": 1},
+    "hotel_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{1,63}$"},
+    "phase_id": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "lifecycle": {
+      "enum": ["DRAFT", "VALIDATED", "READY_TO_OPEN", "OPEN", "CLOSING", "CLOSED", "DEMOLISHED"]
+    },
+    "claims_enabled": {"type": "boolean"},
+    "hotel_base_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "control_ref": {"type": "string", "minLength": 1},
+    "integration_ref": {"type": "string", "minLength": 1},
+    "claim_prefix": {"type": "string", "pattern": "^hotel/[A-Za-z0-9._-]+/claims/$"},
+    "claim_stale_after_hours": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "reception_path": {"type": "string", "pattern": "(^|/)RECEPTION\\.md$"},
+    "current_state_path": {"const": "CURRENT_STATE.md"},
+    "forbidden_write_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "rooms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["room_id", "manifest_path"],
+        "properties": {
+          "room_id": {"type": "string", "pattern": "^R[0-9]{3,}$"},
+          "manifest_path": {"type": "string", "pattern": "ROOM_MANIFEST\\.json$"}
+        }
+      }
+    },
+    "dependency_edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to"],
+        "properties": {
+          "from": {"type": "string", "pattern": "^R[0-9]{3,}$"},
+          "to": {"type": "string", "pattern": "^R[0-9]{3,}$"}
+        }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["history_record", "claim_refs", "room_packets", "working_branches"],
+      "properties": {
+        "history_record": {"enum": ["KEEP"]},
+        "claim_refs": {"enum": ["DELETE_AFTER_CLOSE", "ARCHIVE_REQUIRED_ONLY", "KEEP"]},
+        "room_packets": {"enum": ["DELETE_AFTER_DEMOLITION", "KEEP"]},
+        "working_branches": {"enum": ["DELETE_AFTER_CLOSE", "ARCHIVE_REQUIRED_ONLY", "KEEP"]}
+      }
+    },
+    "opened_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "closed_at_utc": {"type": ["string", "null"], "format": "date-time"}
+  }
+}

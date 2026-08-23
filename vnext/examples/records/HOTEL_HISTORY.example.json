@@ -1,0 +1,50 @@
+{
+  "schema_version": "hotel-history-vnext-0.1",
+  "protocol_version": "vnext-0.1",
+  "hotel_id": "demo-01",
+  "phase_id": "demo",
+  "objective": "Demonstrate one independent Room followed by one dependent Room.",
+  "lifecycle": "DEMOLISHED",
+  "hotel_base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "final_control_sha": "dddddddddddddddddddddddddddddddddddddddd",
+  "final_integration_sha": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "room_results": [
+    {
+      "room_id": "R001",
+      "control_commit_sha": "cccccccccccccccccccccccccccccccccccccccc",
+      "claim_base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "return_head_sha": "1111111111111111111111111111111111111111",
+      "integration_sha": "2222222222222222222222222222222222222222",
+      "attempt_count": 1,
+      "retained_attempt_refs": []
+    },
+    {
+      "room_id": "R002",
+      "control_commit_sha": "3333333333333333333333333333333333333333",
+      "claim_base_sha": "2222222222222222222222222222222222222222",
+      "return_head_sha": "4444444444444444444444444444444444444444",
+      "integration_sha": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "attempt_count": 2,
+      "retained_attempt_refs": [
+        "refs/archive/hotel/demo-01/R002/attempt-1"
+      ]
+    }
+  ],
+  "waived_rooms": [],
+  "durable_outputs": [
+    "source/output-a.md",
+    "source/output-b.md"
+  ],
+  "decision_ids": [
+    "D-DEMO-01"
+  ],
+  "closed_at_utc": "2026-08-21T10:00:00Z",
+  "demolished_at_utc": "2026-08-21T10:15:00Z",
+  "retention_summary": {
+    "claim_refs": "active claim refs deleted after accepted outputs were durable",
+    "attempt_refs": "R002 attempt-1 retained for audit",
+    "room_packets": "deleted after demolition",
+    "worktrees": "deleted after closure",
+    "notes": "Only minimal audit evidence and durable project outputs remain. return_head_sha values were resolved by reviewer from remote claim refs, not declared by Guest return files."
+  }
+}

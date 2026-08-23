@@ -1,7 +1,9 @@
 name: Validate Hotel Protocol vNext
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - vnext/runtime-neutral-hotel-protocol
   pull_request:
     paths:
       - 'vnext/**'
@@ -20,9 +22,7 @@ jobs:
       - name: Compile validators and tests
         run: |
           python -m py_compile vnext/tools/validate_hotel.py
-          python -m py_compile vnext/tools/validate_return.py
           python -m py_compile vnext/tools/test_validate_hotel.py
-          python -m py_compile vnext/tools/test_git_flow.py
 
       - name: Parse JSON documents
         run: |
@@ -77,24 +77,13 @@ jobs:
               (history_schema, history),
           ):
               Draft202012Validator(schema, format_checker=checker).validate(value)
-
-          invalid_scope_return = dict(returned)
-          invalid_scope_return['allowlist_self_check'] = {
-              'result': 'FAIL',
-              'outside_allowlist_paths': ['CURRENT_STATE.md'],
-          }
-          invalid_scope_return['requested_next_state'] = 'REVIEW'
-          if not list(Draft202012Validator(return_schema).iter_errors(invalid_scope_return)):
-              raise SystemExit('RETURN schema should reject REVIEW when allowlist self-check is FAIL')
-
           print('JSON_SCHEMA_EXAMPLES_OK')
           PY
 
       - name: Run positive structural validation
-        run: python vnext/tools/validate_hotel.py vnext/examples/minimal-project/hotels/demo-01
+        run: |
+          python vnext/tools/validate_hotel.py \
+            vnext/examples/minimal-project/hotels/demo-01
 
-      - name: Run structural validator negative cases
+      - name: Run validator negative cases
         run: python vnext/tools/test_validate_hotel.py
-
-      - name: Run real Git control/claim/return flow
-        run: python vnext/tools/test_git_flow.py

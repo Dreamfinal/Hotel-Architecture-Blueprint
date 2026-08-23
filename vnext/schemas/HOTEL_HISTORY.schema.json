@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dreamfinal.github.io/hotel-protocol/vnext/HOTEL_HISTORY.schema.json",
+  "title": "Hotel Protocol vNext - Minimal Completion History",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "protocol_version",
+    "hotel_id",
+    "phase_id",
+    "objective",
+    "lifecycle",
+    "hotel_base_sha",
+    "final_control_sha",
+    "final_integration_sha",
+    "room_results",
+    "waived_rooms",
+    "durable_outputs",
+    "decision_ids",
+    "closed_at_utc",
+    "demolished_at_utc",
+    "retention_summary"
+  ],
+  "properties": {
+    "schema_version": {"const": "hotel-history-vnext-0.1"},
+    "protocol_version": {"type": "string", "minLength": 1},
+    "hotel_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "lifecycle": {"const": "DEMOLISHED"},
+    "hotel_base_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "final_control_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "final_integration_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+    "room_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "room_id",
+          "control_commit_sha",
+          "claim_base_sha",
+          "return_head_sha",
+          "integration_sha"
+        ],
+        "properties": {
+          "room_id": {"type": "string", "pattern": "^R[0-9]{3,}$"},
+          "control_commit_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+          "claim_base_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+          "return_head_sha": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{40}$",
+            "description": "Reviewer-derived exact remote fixed claim-ref head used for acceptance."
+          },
+          "integration_sha": {"type": "string", "pattern": "^[0-9a-fA-F]{40}$"},
+          "attempt_count": {"type": "integer", "minimum": 1},
+          "retained_attempt_refs": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "waived_rooms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["room_id", "decision_id", "reason"],
+        "properties": {
+          "room_id": {"type": "string", "pattern": "^R[0-9]{3,}$"},
+          "decision_id": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "durable_outputs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "decision_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "closed_at_utc": {"type": "string", "format": "date-time"},
+    "demolished_at_utc": {"type": "string", "format": "date-time"},
+    "retention_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_refs", "attempt_refs", "room_packets", "worktrees", "notes"],
+      "properties": {
+        "claim_refs": {"type": "string"},
+        "attempt_refs": {"type": "string"},
+        "room_packets": {"type": "string"},
+        "worktrees": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    }
+  }
+}
